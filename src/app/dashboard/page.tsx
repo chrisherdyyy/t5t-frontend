@@ -243,23 +243,36 @@ export default function DashboardPage() {
           </h2>
           {company?.ai_tools.length ? (
             <div className="space-y-3">
-              {company.ai_tools.map((tool) => (
-                <div
-                  key={tool.tool}
-                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
-                >
-                  <div>
-                    <p className="font-medium text-gray-900">{tool.tool}</p>
-                    <p className="text-sm text-gray-500">
-                      {tool.users.slice(0, 3).join(', ')}
-                      {tool.users.length > 3 && ` +${tool.users.length - 3} more`}
-                    </p>
-                  </div>
-                  <span className="text-lg font-semibold text-primary-600">
-                    {tool.count}
-                  </span>
-                </div>
-              ))}
+              {company.ai_tools
+                .sort((a, b) => b.count - a.count)
+                .slice(0, 8)
+                .map((tool) => {
+                  const maxCount = company.ai_tools[0]?.count || 1
+                  const barWidth = (tool.count / maxCount) * 100
+
+                  return (
+                    <div key={tool.tool} className="group">
+                      <div className="flex items-center justify-between mb-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            {tool.tool}
+                          </span>
+                        </div>
+                        <span className="text-sm text-gray-500">{tool.count}</span>
+                      </div>
+                      <div
+                        className="h-2 bg-gray-100 rounded-full overflow-hidden"
+                        style={{ width: `${Math.min(barWidth, 100)}%` }}
+                      >
+                        <div className="h-full bg-purple-500 rounded-full" />
+                      </div>
+                      <div className="hidden group-hover:block mt-1 text-xs text-gray-500">
+                        {tool.users.slice(0, 3).join(', ')}
+                        {tool.users.length > 3 && ` +${tool.users.length - 3} more`}
+                      </div>
+                    </div>
+                  )
+                })}
             </div>
           ) : (
             <p className="text-gray-500 text-sm">No AI tools reported yet.</p>
