@@ -12,9 +12,11 @@ import {
   LogOut,
   Building2,
   CheckSquare,
+  Search,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Worker } from '@/types'
+import { SearchBar } from './SearchBar'
 
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -146,6 +148,21 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
 
       {/* Main content */}
       <main className="ml-64 min-h-screen">
+        {/* Header with search */}
+        <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+          <div className="flex items-center justify-between px-8 py-4">
+            <div className="flex-1 max-w-md">
+              <SearchBar />
+            </div>
+            <Link
+              href="/dashboard/search"
+              className="ml-4 flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+            >
+              <Search className="w-4 h-4" />
+              <span className="hidden sm:inline">Advanced Search</span>
+            </Link>
+          </div>
+        </div>
         <div className="p-8">{children}</div>
       </main>
     </div>

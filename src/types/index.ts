@@ -264,3 +264,53 @@ export interface WeekSummary {
   top_themes: string[]
   teams: TeamSubmissionSummary[]
 }
+
+// Search types
+export interface SearchResultItem {
+  id: number
+  content: string
+  worker_id: number
+  worker_name: string
+  team_id: number | null
+  team_name: string | null
+  week_of: string
+  themes: string[]
+  sentiment: string | null
+  is_blocker: boolean
+  report_id: number
+}
+
+export interface SearchResponse {
+  query: string
+  total_results: number
+  results: SearchResultItem[]
+}
+
+// Trends types
+export interface WeeklyTheme {
+  week: string
+  themes: Record<string, number>
+}
+
+export interface TrendsResponse {
+  weeks_analyzed: number
+  themes_over_time: WeeklyTheme[]
+  sentiment_trajectory: Array<{
+    week: string
+    positive: number
+    neutral: number
+    negative: number
+  }>
+  blocker_trend: Array<{
+    week: string
+    count: number
+  }>
+  submission_rate: Array<{
+    week: string
+    submitted: number
+    expected: number
+    rate: number
+  }>
+  emerging_themes: string[]
+  declining_themes: string[]
+}

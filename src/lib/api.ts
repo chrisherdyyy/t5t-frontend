@@ -17,6 +17,8 @@ import type {
   AllTimeSummary,
   ActionsResponse,
   WeekSummary,
+  SearchResponse,
+  TrendsResponse,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://t5t-backend-production.up.railway.app/api'
@@ -156,6 +158,37 @@ export const actions = {
 export const reportsByWeek = {
   getWeeks: () => api.get<WeekSummary[]>('/reports/by-week'),
   getWeek: (weekOf: string) => api.get<ReportWithDetails[]>('/reports/', { params: { week_of: weekOf } }),
+  export: (weeks?: number, teamIds?: number[]) => {
+    const params = new URLSearchParams()
+    if (weeks) params.append('weeks', weeks.toString())
+    if (teamIds) teamIds.forEach(id => params.append('team_ids', id.toString()))
+    return `${API_BASE}/reports/export?${params.toString()}`
+  },
+}
+
+// Search
+export const search = {
+  query: (q: string, options?: {
+    teams?: number[]
+    date_from?: string
+    date_to?: string
+    has_blockers?: boolean
+    limit?: number
+  }) => {
+    const params: Record<string, string | number | boolean> = { q }
+    if (options?.teams) params.teams = options.teams.join(',')
+    if (options?.date_from) params.date_from = options.date_from
+    if (options?.date_to) params.date_to = options.date_to
+    if (options?.has_blockers !== undefined) params.has_blockers = options.has_blockers
+    if (options?.limit) params.limit = options.limit
+    return api.get<SearchResponse>('/intelligence/search', { params })
+  },
+}
+
+// Trends
+export const trends = {
+  get: (weeks?: number, teamId?: number) =>
+    api.get<TrendsResponse>('/intelligence/trends', { params: { weeks, team_id: teamId } }),
 }
 
 export default api

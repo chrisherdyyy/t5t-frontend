@@ -2,12 +2,13 @@
 
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { analytics, reports, intelligence } from '@/lib/api'
+import { analytics, reports, intelligence, trends } from '@/lib/api'
 import { formatWeekOf, formatPercentage } from '@/lib/utils'
 import {
   Users,
   CheckCircle,
   TrendingUp,
+  TrendingDown,
   AlertCircle,
   Zap,
   Bot,
@@ -15,6 +16,7 @@ import {
   ArrowRight,
   Filter,
   Building2,
+  Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -45,11 +47,17 @@ export default function DashboardPage() {
     queryFn: () => analytics.getThemesSentiment(),
   })
 
+  const { data: trendsData, isLoading: trendsLoading } = useQuery({
+    queryKey: ['trends'],
+    queryFn: () => trends.get(8),
+  })
+
   const company = companyData?.data
   const themesSentiment = themesSentimentData?.data || []
   const submissions = submissionsData?.data
   const currentReports = reportsData?.data || []
   const summary = summaryData?.data
+  const trendsInfo = trendsData?.data
 
   const isLoading = analyticsLoading || submissionsLoading || reportsLoading || summaryLoading || themesLoading
 
@@ -279,6 +287,63 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Trends Section */}
+      {trendsInfo && (trendsInfo.emerging_themes.length > 0 || trendsInfo.declining_themes.length > 0) && (
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+            Theme Trends
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Emerging Themes */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-green-500" />
+                Emerging Themes
+              </h3>
+              {trendsInfo.emerging_themes.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {trendsInfo.emerging_themes.map((theme) => (
+                    <span
+                      key={theme}
+                      className="px-3 py-1.5 bg-green-50 text-green-700 rounded-full text-sm font-medium border border-green-200"
+                    >
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No emerging themes detected</p>
+              )}
+            </div>
+            {/* Declining Themes */}
+            <div>
+              <h3 className="text-sm font-medium text-gray-700 mb-3 flex items-center gap-2">
+                <TrendingDown className="w-4 h-4 text-red-500" />
+                Declining Themes
+              </h3>
+              {trendsInfo.declining_themes.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {trendsInfo.declining_themes.map((theme) => (
+                    <span
+                      key={theme}
+                      className="px-3 py-1.5 bg-red-50 text-red-700 rounded-full text-sm font-medium border border-red-200"
+                    >
+                      {theme}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-gray-500">No declining themes detected</p>
+              )}
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-4">
+            Based on {trendsInfo.weeks_analyzed} weeks of data
+          </p>
+        </div>
+      )}
 
       {/* Submission Status */}
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
