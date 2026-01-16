@@ -1089,7 +1089,9 @@ function WorkerProfileView({ profile }: { profile: any }) {
 
   // Handle API field name differences
   const name = profile.worker_name || profile.name
-  const narrative = profile.narrative || profile.ai_summary
+  // Strip markdown bold headers like "**Name - Title Profile**" from narrative
+  const rawNarrative = profile.narrative || profile.ai_summary || ''
+  const narrative = rawNarrative.replace(/^\*\*[^*]+\*\*\s*/i, '')
   const themes = profile.themes || profile.primary_themes || []
   const aiTools = profile.ai_tools_used || []
   const highlights = profile.highlights || profile.recent_wins || []

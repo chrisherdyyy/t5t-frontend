@@ -228,3 +228,39 @@ export interface AllTimeSummary {
   sentiment_distribution: { positive: number; neutral: number; negative: number }
   narrative: string
 }
+
+// Actions tracking types
+export interface ActionItem {
+  id: number
+  content: string
+  worker_name: string
+  team_name: string | null
+  week_of: string
+  themes: string[]
+  is_blocker: boolean
+  action_status: 'pending' | 'completed'
+  action_completed_at: string | null
+}
+
+export interface ActionsResponse {
+  pending: ActionItem[]
+  completed: ActionItem[]
+  by_week: Record<string, ActionItem[]>
+}
+
+// Reports by week types
+export interface TeamSubmissionSummary {
+  team_id: number
+  team_name: string
+  submitted: number
+  expected: number
+}
+
+export interface WeekSummary {
+  week_of: string
+  submission_count: number
+  expected_count: number
+  completion_rate: number
+  top_themes: string[]
+  teams: TeamSubmissionSummary[]
+}

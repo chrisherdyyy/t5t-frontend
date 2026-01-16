@@ -11,6 +11,7 @@ import {
   Settings,
   LogOut,
   Building2,
+  CheckSquare,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { Worker } from '@/types'
@@ -18,6 +19,7 @@ import type { Worker } from '@/types'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Reports', href: '/dashboard/reports', icon: FileText },
+  { name: 'Actions', href: '/dashboard/actions', icon: CheckSquare },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Org Chart', href: '/dashboard/org-chart', icon: Building2 },
 ]

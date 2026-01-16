@@ -15,6 +15,8 @@ import type {
   WorkerProfile,
   AvailableWeeksResponse,
   AllTimeSummary,
+  ActionsResponse,
+  WeekSummary,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://t5t-backend-production.up.railway.app/api'
@@ -134,6 +136,26 @@ export const intelligence = {
     api.get<AllTimeSummary>('/intelligence/summary/company/all-time'),
   getTeamSummaryAllTime: (teamId: number) =>
     api.get<AllTimeSummary>(`/intelligence/summary/team/${teamId}/all-time`),
+}
+
+// Actions tracking
+export const actions = {
+  getAll: (status?: 'pending' | 'completed' | 'all', weekOf?: string) =>
+    api.get<ActionsResponse>('/intelligence/actions', { params: { status, week_of: weekOf } }),
+  complete: (itemId: number) =>
+    api.patch<{ status: string; item_id: number; action_status: string; completed_at: string }>(
+      `/intelligence/actions/${itemId}/complete`
+    ),
+  reopen: (itemId: number) =>
+    api.patch<{ status: string; item_id: number; action_status: string }>(
+      `/intelligence/actions/${itemId}/reopen`
+    ),
+}
+
+// Reports by week (for redesigned reports page)
+export const reportsByWeek = {
+  getWeeks: () => api.get<WeekSummary[]>('/reports/by-week'),
+  getWeek: (weekOf: string) => api.get<ReportWithDetails[]>('/reports/', { params: { week_of: weekOf } }),
 }
 
 export default api
