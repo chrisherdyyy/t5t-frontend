@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { intelligence, teams as teamsApi, workers as workersApi } from '@/lib/api'
@@ -23,6 +23,18 @@ import {
 import Link from 'next/link'
 
 export default function AnalyticsPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    }>
+      <AnalyticsContent />
+    </Suspense>
+  )
+}
+
+function AnalyticsContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const queryClient = useQueryClient()
@@ -82,26 +94,22 @@ export default function AnalyticsPage() {
   })
 
   // Main data queries based on scope and time
-  const { data: summaryData, isLoading: summaryLoading } = useQuery({
-    queryKey: ['executive-summary', scope, teamId, weekOf],
-    queryFn: () => {
-      if (scope === 'team' && teamId) {
-        return intelligence.getTeamSummary(teamId, weekOf)
-      }
-      return intelligence.getCompanySummary({ week_of: weekOf })
-    },
-    enabled: timeRange !== 'all_time' && scope !== 'worker',
+  const { data: companySummaryData, isLoading: companySummaryLoading } = useQuery({
+    queryKey: ['company-summary', weekOf],
+    queryFn: () => intelligence.getCompanySummary({ week_of: weekOf }),
+    enabled: timeRange !== 'all_time' && scope === 'company',
   })
 
-  const { data: allTimeSummaryData, isLoading: allTimeLoading } = useQuery({
-    queryKey: ['all-time-summary', scope, teamId],
-    queryFn: () => {
-      if (scope === 'team' && teamId) {
-        return intelligence.getTeamSummaryAllTime(teamId)
-      }
-      return intelligence.getCompanySummaryAllTime()
-    },
-    enabled: timeRange === 'all_time' && scope !== 'worker',
+  const { data: companyAllTimeData, isLoading: companyAllTimeLoading } = useQuery({
+    queryKey: ['company-all-time'],
+    queryFn: () => intelligence.getCompanySummaryAllTime(),
+    enabled: timeRange === 'all_time' && scope === 'company',
+  })
+
+  const { data: teamAllTimeData, isLoading: teamAllTimeLoading } = useQuery({
+    queryKey: ['team-all-time', teamId],
+    queryFn: () => intelligence.getTeamSummaryAllTime(teamId!),
+    enabled: timeRange === 'all_time' && scope === 'team' && !!teamId,
   })
 
   const { data: workerProfileData, isLoading: workerLoading } = useQuery({
@@ -121,12 +129,13 @@ export default function AnalyticsPage() {
     onMutate: () => setIsRegenerating(true),
     onSettled: () => {
       setIsRegenerating(false)
-      queryClient.invalidateQueries({ queryKey: ['executive-summary'] })
+      queryClient.invalidateQueries({ queryKey: ['company-summary'] })
     },
   })
 
-  const summary = summaryData?.data
-  const allTimeSummary = allTimeSummaryData?.data
+  const companySummary = companySummaryData?.data
+  const companyAllTime = companyAllTimeData?.data
+  const teamAllTime = teamAllTimeData?.data
   const workerProfile = workerProfileData?.data
   const teams = teamsData?.data || []
   const teamsList = teamsListData?.data || []
@@ -134,8 +143,10 @@ export default function AnalyticsPage() {
   const availableWeeks = availableWeeksData?.data?.available_weeks || []
 
   const isLoading =
-    (timeRange === 'all_time' ? allTimeLoading : summaryLoading) ||
+    (scope === 'company' && timeRange === 'all_time' && companyAllTimeLoading) ||
+    (scope === 'company' && timeRange !== 'all_time' && companySummaryLoading) ||
     (scope === 'company' && timeRange !== 'all_time' && teamsLoading) ||
+    (scope === 'team' && timeRange === 'all_time' && teamAllTimeLoading) ||
     (scope === 'worker' && workerLoading)
 
   // Helper to get display name for selected team/worker
@@ -156,7 +167,7 @@ export default function AnalyticsPage() {
     ? 'All Time'
     : timeRange === 'specific_week' && weekOf
       ? formatWeekDisplay(weekOf)
-      : formatWeekDisplay(summary?.week_of || allTimeSummary?.ai_adoption_trend?.[0]?.week)
+      : formatWeekDisplay(companySummary?.week_of)
 
   return (
     <div>
@@ -365,7 +376,7 @@ export default function AnalyticsPage() {
       {/* Company Weekly View */}
       {!isLoading && scope === 'company' && timeRange !== 'all_time' && (
         <CompanyWeeklyView
-          summary={summary}
+          summary={companySummary}
           teams={teams}
           isRegenerating={isRegenerating}
           onRegenerate={() => regenerateMutation.mutate()}
@@ -374,7 +385,7 @@ export default function AnalyticsPage() {
 
       {/* Company All-Time View */}
       {!isLoading && scope === 'company' && timeRange === 'all_time' && (
-        <CompanyAllTimeView summary={allTimeSummary} />
+        <CompanyAllTimeView summary={companyAllTime} />
       )}
 
       {/* Team Weekly View */}
@@ -384,7 +395,7 @@ export default function AnalyticsPage() {
 
       {/* Team All-Time View */}
       {!isLoading && scope === 'team' && teamId && timeRange === 'all_time' && (
-        <TeamAllTimeView summary={allTimeSummary} teamId={teamId} teamName={selectedTeamName} />
+        <TeamAllTimeView summary={teamAllTime} teamId={teamId} teamName={selectedTeamName} />
       )}
 
       {/* Team Not Selected */}
