@@ -24,6 +24,7 @@ export function WorkerModal({
   const [formData, setFormData] = useState({
     name: worker?.name || '',
     email: worker?.email || '',
+    job_title: worker?.job_title || '',
     team_id: worker?.team_id?.toString() || '',
     manager_id: worker?.manager_id?.toString() || '',
     role: worker?.role || 'worker',
@@ -34,6 +35,7 @@ export function WorkerModal({
     onSubmit({
       name: formData.name,
       email: formData.email,
+      job_title: formData.job_title || undefined,
       team_id: formData.team_id ? parseInt(formData.team_id) : undefined,
       manager_id: formData.manager_id ? parseInt(formData.manager_id) : undefined,
       role: formData.role as 'admin' | 'manager' | 'worker',
@@ -84,6 +86,21 @@ export function WorkerModal({
               onChange={(e) =>
                 setFormData({ ...formData, email: e.target.value })
               }
+              className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Job Title
+            </label>
+            <input
+              type="text"
+              value={formData.job_title}
+              onChange={(e) =>
+                setFormData({ ...formData, job_title: e.target.value })
+              }
+              placeholder="e.g. Software Engineer"
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             />
           </div>
