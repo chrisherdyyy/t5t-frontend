@@ -95,6 +95,14 @@ function WeekSection({
   loadingAction: number | null
 }) {
   const pendingCount = actions.filter((a) => a.action_status === 'pending').length
+  const completedCount = actions.filter((a) => a.action_status === 'completed').length
+
+  // Sort actions: pending first, then completed
+  const sortedActions = [...actions].sort((a, b) => {
+    if (a.action_status === 'pending' && b.action_status === 'completed') return -1
+    if (a.action_status === 'completed' && b.action_status === 'pending') return 1
+    return 0
+  })
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -112,19 +120,24 @@ function WeekSection({
             {formatWeekOf(weekOf)}
           </span>
         </div>
-        <span className={`text-sm px-2 py-0.5 rounded-full ${
-          pendingCount > 0
-            ? 'bg-amber-100 text-amber-700'
-            : 'bg-green-100 text-green-700'
-        }`}>
-          {pendingCount > 0 ? `${pendingCount} pending` : 'All complete'}
-        </span>
+        <div className="flex items-center gap-2">
+          {pendingCount > 0 && (
+            <span className="text-sm px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
+              {pendingCount} pending
+            </span>
+          )}
+          {completedCount > 0 && (
+            <span className="text-sm px-2 py-0.5 rounded-full bg-green-100 text-green-700">
+              {completedCount} completed
+            </span>
+          )}
+        </div>
       </button>
 
       {isExpanded && (
         <div className="p-4 space-y-3 bg-white">
-          {actions.length > 0 ? (
-            actions.map((action) => (
+          {sortedActions.length > 0 ? (
+            sortedActions.map((action) => (
               <ActionCard
                 key={action.id}
                 action={action}
@@ -146,7 +159,6 @@ function WeekSection({
 export default function ActionsPage() {
   const queryClient = useQueryClient()
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set())
-  const [showCompleted, setShowCompleted] = useState(false)
   const [loadingAction, setLoadingAction] = useState<number | null>(null)
   const hasInitializedRef = useRef(false)
 
@@ -241,13 +253,11 @@ export default function ActionsPage() {
         </div>
       </div>
 
-      {/* Pending Actions by Week */}
+      {/* Actions by Week - shows both pending and completed */}
       {sortedWeeks.length > 0 ? (
-        <div className="space-y-4 mb-8">
+        <div className="space-y-4">
           {sortedWeeks.map((weekOf) => {
-            const weekActions = (byWeek[weekOf] || []).filter(
-              (a: ActionItem) => a.action_status === 'pending'
-            )
+            const weekActions = byWeek[weekOf] || []
             if (weekActions.length === 0) return null
 
             return (
@@ -264,44 +274,12 @@ export default function ActionsPage() {
           })}
         </div>
       ) : (
-        <div className="text-center py-12 bg-white rounded-lg border mb-8">
+        <div className="text-center py-12 bg-white rounded-lg border">
           <CheckSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
           <p className="text-gray-500">No actionable items found.</p>
           <p className="text-sm text-gray-400 mt-1">
             Actions are extracted from T5T submissions that mention blockers, friction points, or actionable requests.
           </p>
-        </div>
-      )}
-
-      {/* Completed Section */}
-      {completedActions.length > 0 && (
-        <div className="border-t pt-6">
-          <button
-            onClick={() => setShowCompleted(!showCompleted)}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4"
-          >
-            {showCompleted ? (
-              <ChevronDown className="w-5 h-5" />
-            ) : (
-              <ChevronRight className="w-5 h-5" />
-            )}
-            <span className="font-medium">
-              Completed ({completedActions.length})
-            </span>
-          </button>
-
-          {showCompleted && (
-            <div className="space-y-3">
-              {completedActions.map((action) => (
-                <ActionCard
-                  key={action.id}
-                  action={action}
-                  onToggle={() => handleActionToggle(action)}
-                  isLoading={loadingAction === action.id}
-                />
-              ))}
-            </div>
-          )}
         </div>
       )}
     </div>
