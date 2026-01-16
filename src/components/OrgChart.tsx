@@ -97,12 +97,14 @@ function ChartNode({ node, onNodeClick, isRoot }: ChartNodeProps) {
               </div>
             </div>
 
-            {/* Name & Role */}
+            {/* Name & Job Title */}
             <div className="text-center">
               <h3 className="font-semibold text-gray-900 truncate" title={node.name}>
                 {node.name}
               </h3>
-              <p className="text-xs text-gray-500 capitalize mt-0.5">{node.role}</p>
+              <p className="text-xs text-gray-500 mt-0.5 truncate" title={node.job_title || node.role}>
+                {node.job_title || node.role}
+              </p>
               {node.team_name && (
                 <p className="text-xs text-gray-400 mt-1 truncate" title={node.team_name}>
                   {node.team_name}
@@ -264,9 +266,14 @@ function ListNode({
 
         {/* Info */}
         <div className="flex-1 min-w-0">
-          <span className="font-medium text-gray-900">{node.name}</span>
-          {node.team_name && (
-            <span className="text-gray-400 text-sm ml-2">· {node.team_name}</span>
+          <div className="flex items-center gap-2">
+            <span className="font-medium text-gray-900">{node.name}</span>
+            {node.team_name && (
+              <span className="text-gray-400 text-sm">· {node.team_name}</span>
+            )}
+          </div>
+          {node.job_title && (
+            <p className="text-xs text-gray-500 truncate">{node.job_title}</p>
           )}
         </div>
 

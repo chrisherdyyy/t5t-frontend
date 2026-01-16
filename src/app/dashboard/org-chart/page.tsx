@@ -232,9 +232,11 @@ export default function OrgChartPage() {
                       {selectedNode.name}
                     </p>
                     <p className="text-sm text-gray-500">{selectedNode.email}</p>
-                    <p className="text-sm text-gray-500 capitalize">
-                      {selectedNode.role}
-                      {selectedNode.team_name && ` - ${selectedNode.team_name}`}
+                    {selectedNode.job_title && (
+                      <p className="text-sm text-gray-600">{selectedNode.job_title}</p>
+                    )}
+                    <p className="text-sm text-gray-400">
+                      {selectedNode.team_name || selectedNode.role}
                     </p>
                   </div>
                 </div>

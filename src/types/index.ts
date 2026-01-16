@@ -12,6 +12,7 @@ export interface Worker {
   id: number
   email: string
   name: string
+  job_title: string | null
   team_id: number | null
   manager_id: number | null
   role: UserRole
@@ -29,6 +30,7 @@ export interface OrgChartNode {
   id: number
   name: string
   email: string
+  job_title: string | null
   role: UserRole
   team_name: string | null
   has_submitted_this_week: boolean

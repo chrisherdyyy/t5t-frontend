@@ -7,7 +7,7 @@ import { Plus, Pencil, Trash2, Search, ChevronUp, ChevronDown } from 'lucide-rea
 import { WorkerModal } from '@/components/WorkerModal'
 import type { Worker, Team, UserRole } from '@/types'
 
-type SortField = 'name' | 'email' | 'role' | 'team' | 'manager' | 'reports'
+type SortField = 'name' | 'email' | 'job_title' | 'role' | 'team' | 'manager' | 'reports'
 
 // Generate consistent color from string (for team badges)
 function getTeamColor(teamName: string): { bg: string; text: string } {
@@ -148,6 +148,10 @@ export default function WorkersPage() {
           aVal = a.email.toLowerCase()
           bVal = b.email.toLowerCase()
           break
+        case 'job_title':
+          aVal = a.job_title?.toLowerCase() || 'zzz'
+          bVal = b.job_title?.toLowerCase() || 'zzz'
+          break
         case 'role':
           aVal = a.role
           bVal = b.role
@@ -250,6 +254,15 @@ export default function WorkersPage() {
                   </div>
                 </th>
                 <th
+                  onClick={() => handleSort('job_title')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  <div className="flex items-center gap-1">
+                    Job Title
+                    <SortIcon field="job_title" />
+                  </div>
+                </th>
+                <th
                   onClick={() => handleSort('role')}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
@@ -314,6 +327,9 @@ export default function WorkersPage() {
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {worker.email}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-600">
+                      {worker.job_title || <span className="text-gray-400">-</span>}
                     </td>
                     <td className="px-6 py-4">
                       <span
