@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { analytics, reports, intelligence } from '@/lib/api'
 import { formatWeekOf, formatPercentage } from '@/lib/utils'
@@ -12,10 +13,13 @@ import {
   Bot,
   Brain,
   ArrowRight,
+  Filter,
+  Building2,
 } from 'lucide-react'
 import Link from 'next/link'
 
 export default function DashboardPage() {
+  const [showOnlyMissing, setShowOnlyMissing] = useState(false)
   const { data: companyData, isLoading: analyticsLoading } = useQuery({
     queryKey: ['company-analytics'],
     queryFn: () => analytics.getCompanyAnalytics(),
@@ -191,9 +195,22 @@ export default function DashboardPage() {
       {/* Submission Status */}
       <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-gray-900">
-            Submission Status
-          </h2>
+          <div className="flex items-center gap-4">
+            <h2 className="text-lg font-semibold text-gray-900">
+              Submission Status
+            </h2>
+            <button
+              onClick={() => setShowOnlyMissing(!showOnlyMissing)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
+                showOnlyMissing
+                  ? 'bg-red-100 text-red-700 border border-red-200'
+                  : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+              }`}
+            >
+              <Filter className="w-3 h-3" />
+              {showOnlyMissing ? 'Showing missing only' : 'Show missing only'}
+            </button>
+          </div>
           <Link
             href="/dashboard/reports"
             className="text-sm text-primary-600 hover:text-primary-700"
@@ -202,32 +219,69 @@ export default function DashboardPage() {
           </Link>
         </div>
         {submissions?.submissions.length ? (
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-            {submissions.submissions.map((sub) => (
-              <div
-                key={sub.worker_id}
-                className={`p-3 rounded-lg text-center ${
-                  sub.submitted
-                    ? 'bg-green-50 border border-green-200'
-                    : 'bg-gray-50 border border-gray-200'
-                }`}
-              >
-                <div className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-white">
-                  {sub.submitted ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
-                  ) : (
-                    <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-                  )}
-                </div>
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {sub.worker_name}
-                </p>
-                {sub.team_name && (
-                  <p className="text-xs text-gray-500 truncate">{sub.team_name}</p>
-                )}
-              </div>
-            ))}
-          </div>
+          <>
+            {/* Team Summary Bar */}
+            <div className="flex items-center gap-2 mb-4 pb-4 border-b overflow-x-auto">
+              {(() => {
+                const teamStats: Record<string, { submitted: number; total: number }> = {}
+                submissions.submissions.forEach((sub) => {
+                  const team = sub.team_name || 'No Team'
+                  if (!teamStats[team]) teamStats[team] = { submitted: 0, total: 0 }
+                  teamStats[team].total++
+                  if (sub.submitted) teamStats[team].submitted++
+                })
+                return Object.entries(teamStats)
+                  .sort((a, b) => b[1].total - a[1].total)
+                  .slice(0, 6)
+                  .map(([team, stats]) => (
+                    <div
+                      key={team}
+                      className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 rounded-lg shrink-0"
+                    >
+                      <Building2 className="w-3 h-3 text-gray-400" />
+                      <span className="text-xs font-medium text-gray-700">{team}</span>
+                      <span className={`text-xs font-bold ${
+                        stats.submitted === stats.total ? 'text-green-600' :
+                        stats.submitted / stats.total >= 0.5 ? 'text-yellow-600' : 'text-red-600'
+                      }`}>
+                        {stats.submitted}/{stats.total}
+                      </span>
+                    </div>
+                  ))
+              })()}
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              {submissions.submissions
+                .filter((sub) => !showOnlyMissing || !sub.submitted)
+                .map((sub) => (
+                  <div
+                    key={sub.worker_id}
+                    className={`p-3 rounded-lg text-center ${
+                      sub.submitted
+                        ? 'bg-green-50 border border-green-200'
+                        : 'bg-gray-50 border border-gray-200'
+                    }`}
+                  >
+                    <div className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-white">
+                      {sub.submitted ? (
+                        <CheckCircle className="w-5 h-5 text-green-500" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
+                      )}
+                    </div>
+                    <p className="text-sm font-medium text-gray-900 truncate">
+                      {sub.worker_name}
+                    </p>
+                    {sub.team_name && (
+                      <p className="text-xs text-gray-500 truncate">{sub.team_name}</p>
+                    )}
+                  </div>
+                ))}
+            </div>
+            {showOnlyMissing && submissions.submissions.filter(s => !s.submitted).length === 0 && (
+              <p className="text-green-600 text-sm text-center py-4">Everyone has submitted!</p>
+            )}
+          </>
         ) : (
           <p className="text-gray-500 text-sm">No workers registered yet.</p>
         )}
