@@ -14,7 +14,7 @@ export default function OrgChartPage() {
   const router = useRouter()
   const queryClient = useQueryClient()
   const [selectedNode, setSelectedNode] = useState<OrgChartNode | null>(null)
-  const [viewMode, setViewMode] = useState<'visual' | 'list'>('visual')
+  const [viewMode, setViewMode] = useState<'visual' | 'list'>('list')
   const [zoom, setZoom] = useState(100)
   const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 

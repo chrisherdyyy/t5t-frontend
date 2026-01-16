@@ -209,7 +209,7 @@ function ListNode({
   onNodeClick?: (node: OrgChartNode) => void
   level: number
 }) {
-  const [isExpanded, setIsExpanded] = useState(level < 2)
+  const [isExpanded, setIsExpanded] = useState(level < 3)
   const hasChildren = node.children && node.children.length > 0
 
   const getInitials = (name: string) => {
