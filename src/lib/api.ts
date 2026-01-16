@@ -69,7 +69,7 @@ export const workers = {
   list: (params?: { team_id?: number; is_active?: boolean }) =>
     api.get<Worker[]>('/workers/', { params }),
   get: (id: number) => api.get<WorkerWithRelations>(`/workers/${id}`),
-  getOrgChart: () => api.get<OrgChartNode[]>('/workers/org-chart/'),
+  getOrgChart: () => api.get<OrgChartNode[]>('/workers/org-chart'),
   create: (data: {
     email: string
     name: string
@@ -88,19 +88,19 @@ export const reports = {
     api.get<Report[]>('/reports/', { params }),
   get: (id: number) => api.get<ReportWithDetails>(`/reports/${id}`),
   getCurrentWeek: (team_id?: number) =>
-    api.get<ReportWithDetails[]>('/reports/current-week/', { params: { team_id } }),
+    api.get<ReportWithDetails[]>('/reports/current-week', { params: { team_id } }),
   getWorkerHistory: (worker_id: number) =>
-    api.get<Report[]>(`/reports/worker/${worker_id}/history/`),
+    api.get<Report[]>(`/reports/worker/${worker_id}/history`),
 }
 
 // Analytics
 export const analytics = {
   getSubmissions: (params?: { week_of?: string; team_id?: number }) =>
-    api.get<WeeklySubmissionSummary>('/analytics/submissions/', { params }),
+    api.get<WeeklySubmissionSummary>('/analytics/submissions', { params }),
   getCompanyAnalytics: (week_of?: string) =>
-    api.get<CompanyAnalytics>('/analytics/company/', { params: { week_of } }),
+    api.get<CompanyAnalytics>('/analytics/company', { params: { week_of } }),
   getTeamAnalytics: (team_id: number, week_of?: string) =>
-    api.get<CompanyAnalytics>(`/analytics/team/${team_id}/`, { params: { week_of } }),
+    api.get<CompanyAnalytics>(`/analytics/team/${team_id}`, { params: { week_of } }),
 }
 
 export default api
