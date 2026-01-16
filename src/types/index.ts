@@ -117,3 +117,32 @@ export interface CompanyAnalytics {
   blockers: string[]
   wins: string[]
 }
+
+// CEO Intelligence types
+export interface IntelligenceMetrics {
+  submission_rate: number
+  submitted_count: number
+  total_workers: number
+  ai_adoption_rate: number
+  blocker_count: number
+}
+
+export interface ExecutiveSummary {
+  week_of: string
+  narrative: string
+  highlights: string[]
+  concerns: string[]
+  metrics: IntelligenceMetrics
+  top_themes?: string[]
+  team_submissions?: Record<string, number>
+}
+
+export interface TeamHealth {
+  team_id: number
+  team_name: string
+  submission_rate: number
+  submitted_count: number
+  total_workers: number
+  ai_adoption_rate: number
+  blocker_count: number
+}

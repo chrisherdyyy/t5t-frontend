@@ -1,7 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import { analytics, reports } from '@/lib/api'
+import { analytics, reports, intelligence } from '@/lib/api'
 import { formatWeekOf, formatPercentage } from '@/lib/utils'
 import {
   Users,
@@ -10,6 +10,8 @@ import {
   AlertCircle,
   Zap,
   Bot,
+  Brain,
+  ArrowRight,
 } from 'lucide-react'
 import Link from 'next/link'
 
@@ -29,11 +31,17 @@ export default function DashboardPage() {
     queryFn: () => reports.getCurrentWeek(),
   })
 
+  const { data: summaryData, isLoading: summaryLoading } = useQuery({
+    queryKey: ['executive-summary'],
+    queryFn: () => intelligence.getCompanySummary(),
+  })
+
   const company = companyData?.data
   const submissions = submissionsData?.data
   const currentReports = reportsData?.data || []
+  const summary = summaryData?.data
 
-  const isLoading = analyticsLoading || submissionsLoading || reportsLoading
+  const isLoading = analyticsLoading || submissionsLoading || reportsLoading || summaryLoading
 
   if (isLoading) {
     return (
@@ -51,6 +59,32 @@ export default function DashboardPage() {
           <p className="text-gray-600">{formatWeekOf(company.week_of)}</p>
         )}
       </div>
+
+      {/* Executive Summary Card */}
+      {summary?.narrative && (
+        <div className="bg-gradient-to-br from-primary-50 to-white rounded-xl shadow-sm border border-primary-100 p-6 mb-8">
+          <div className="flex items-start gap-4">
+            <div className="p-2 rounded-lg bg-primary-100 shrink-0">
+              <Brain className="w-5 h-5 text-primary-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between mb-2">
+                <h2 className="text-sm font-semibold text-gray-900">AI Executive Summary</h2>
+                <Link
+                  href="/dashboard/analytics"
+                  className="text-xs text-primary-600 hover:text-primary-700 flex items-center gap-1"
+                >
+                  Full Intelligence
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
+              <p className="text-sm text-gray-700 leading-relaxed line-clamp-3">
+                {summary.narrative}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

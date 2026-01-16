@@ -8,6 +8,8 @@ import type {
   ReportWithDetails,
   WeeklySubmissionSummary,
   CompanyAnalytics,
+  ExecutiveSummary,
+  TeamHealth,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://t5t-backend-production.up.railway.app/api'
@@ -101,6 +103,16 @@ export const analytics = {
     api.get<CompanyAnalytics>('/analytics/company', { params: { week_of } }),
   getTeamAnalytics: (team_id: number, week_of?: string) =>
     api.get<CompanyAnalytics>(`/analytics/team/${team_id}`, { params: { week_of } }),
+}
+
+// CEO Intelligence
+export const intelligence = {
+  getCompanySummary: (params?: { week_of?: string; regenerate?: boolean }) =>
+    api.get<ExecutiveSummary>('/intelligence/summary/company', { params }),
+  getTeamsHealth: (week_of?: string) =>
+    api.get<TeamHealth[]>('/intelligence/teams/health', { params: { week_of } }),
+  regenerateSummary: (week_of?: string) =>
+    api.post('/intelligence/summary/regenerate', null, { params: { week_of } }),
 }
 
 export default api
