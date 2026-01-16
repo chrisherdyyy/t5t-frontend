@@ -94,15 +94,10 @@ function WeekSection({
   onActionToggle: (action: ActionItem) => void
   loadingAction: number | null
 }) {
-  const pendingCount = actions.filter((a) => a.action_status === 'pending').length
-  const completedCount = actions.filter((a) => a.action_status === 'completed').length
+  const [showCompleted, setShowCompleted] = useState(false)
 
-  // Sort actions: pending first, then completed
-  const sortedActions = [...actions].sort((a, b) => {
-    if (a.action_status === 'pending' && b.action_status === 'completed') return -1
-    if (a.action_status === 'completed' && b.action_status === 'pending') return 1
-    return 0
-  })
+  const pendingActions = actions.filter((a) => a.action_status === 'pending')
+  const completedActions = actions.filter((a) => a.action_status === 'completed')
 
   return (
     <div className="border rounded-lg overflow-hidden">
@@ -121,34 +116,69 @@ function WeekSection({
           </span>
         </div>
         <div className="flex items-center gap-2">
-          {pendingCount > 0 && (
+          {pendingActions.length > 0 && (
             <span className="text-sm px-2 py-0.5 rounded-full bg-amber-100 text-amber-700">
-              {pendingCount} pending
+              {pendingActions.length} pending
             </span>
           )}
-          {completedCount > 0 && (
+          {completedActions.length > 0 && (
             <span className="text-sm px-2 py-0.5 rounded-full bg-green-100 text-green-700">
-              {completedCount} completed
+              {completedActions.length} completed
             </span>
           )}
         </div>
       </button>
 
       {isExpanded && (
-        <div className="p-4 space-y-3 bg-white">
-          {sortedActions.length > 0 ? (
-            sortedActions.map((action) => (
-              <ActionCard
-                key={action.id}
-                action={action}
-                onToggle={() => onActionToggle(action)}
-                isLoading={loadingAction === action.id}
-              />
-            ))
+        <div className="p-4 bg-white">
+          {/* Pending Actions */}
+          {pendingActions.length > 0 ? (
+            <div className="space-y-3">
+              {pendingActions.map((action) => (
+                <ActionCard
+                  key={action.id}
+                  action={action}
+                  onToggle={() => onActionToggle(action)}
+                  isLoading={loadingAction === action.id}
+                />
+              ))}
+            </div>
           ) : (
             <p className="text-sm text-gray-500 text-center py-4">
-              No actions for this week.
+              No pending actions for this week.
             </p>
+          )}
+
+          {/* Completed Actions - Collapsible */}
+          {completedActions.length > 0 && (
+            <div className="mt-4 pt-4 border-t border-gray-100">
+              <button
+                onClick={() => setShowCompleted(!showCompleted)}
+                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-3"
+              >
+                {showCompleted ? (
+                  <ChevronDown className="w-4 h-4" />
+                ) : (
+                  <ChevronRight className="w-4 h-4" />
+                )}
+                <span className="text-sm font-medium">
+                  Completed ({completedActions.length})
+                </span>
+              </button>
+
+              {showCompleted && (
+                <div className="space-y-3">
+                  {completedActions.map((action) => (
+                    <ActionCard
+                      key={action.id}
+                      action={action}
+                      onToggle={() => onActionToggle(action)}
+                      isLoading={loadingAction === action.id}
+                    />
+                  ))}
+                </div>
+              )}
+            </div>
           )}
         </div>
       )}
