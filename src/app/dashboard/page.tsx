@@ -40,12 +40,18 @@ export default function DashboardPage() {
     queryFn: () => intelligence.getCompanySummary(),
   })
 
+  const { data: themesSentimentData, isLoading: themesLoading } = useQuery({
+    queryKey: ['themes-sentiment'],
+    queryFn: () => analytics.getThemesSentiment(),
+  })
+
   const company = companyData?.data
+  const themesSentiment = themesSentimentData?.data || []
   const submissions = submissionsData?.data
   const currentReports = reportsData?.data || []
   const summary = summaryData?.data
 
-  const isLoading = analyticsLoading || submissionsLoading || reportsLoading || summaryLoading
+  const isLoading = analyticsLoading || submissionsLoading || reportsLoading || summaryLoading || themesLoading
 
   if (isLoading) {
     return (
@@ -123,12 +129,81 @@ export default function DashboardPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {/* Top Themes */}
+        {/* Top Themes with Sentiment */}
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">
             Top Themes This Week
           </h2>
-          {company?.top_themes.length ? (
+          {themesSentiment.length > 0 ? (
+            <div className="space-y-3">
+              {themesSentiment.slice(0, 8).map((theme) => {
+                const total = theme.count
+                const maxCount = themesSentiment[0]?.count || 1
+                const positiveWidth = (theme.sentiment_breakdown.positive / total) * 100
+                const neutralWidth = (theme.sentiment_breakdown.neutral / total) * 100
+                const negativeWidth = (theme.sentiment_breakdown.negative / total) * 100
+                const barWidth = (total / maxCount) * 100
+
+                return (
+                  <div key={theme.theme} className="group">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-gray-700 capitalize">
+                          {theme.theme}
+                        </span>
+                        {theme.blocker_count > 0 && (
+                          <span className="flex items-center gap-0.5 text-xs text-red-600">
+                            <AlertCircle className="w-3 h-3" />
+                            {theme.blocker_count}
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-sm text-gray-500">{theme.count}</span>
+                    </div>
+                    <div
+                      className="h-2 bg-gray-100 rounded-full overflow-hidden flex"
+                      style={{ width: `${Math.min(barWidth, 100)}%` }}
+                      title={`Positive: ${theme.sentiment_breakdown.positive}, Neutral: ${theme.sentiment_breakdown.neutral}, Negative: ${theme.sentiment_breakdown.negative}`}
+                    >
+                      {positiveWidth > 0 && (
+                        <div
+                          className="h-full bg-green-500"
+                          style={{ width: `${positiveWidth}%` }}
+                        />
+                      )}
+                      {neutralWidth > 0 && (
+                        <div
+                          className="h-full bg-gray-400"
+                          style={{ width: `${neutralWidth}%` }}
+                        />
+                      )}
+                      {negativeWidth > 0 && (
+                        <div
+                          className="h-full bg-red-500"
+                          style={{ width: `${negativeWidth}%` }}
+                        />
+                      )}
+                    </div>
+                    {/* Tooltip on hover */}
+                    <div className="hidden group-hover:flex items-center gap-3 mt-1 text-xs text-gray-500">
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                        {theme.sentiment_breakdown.positive} positive
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-gray-400"></span>
+                        {theme.sentiment_breakdown.neutral} neutral
+                      </span>
+                      <span className="flex items-center gap-1">
+                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                        {theme.sentiment_breakdown.negative} negative
+                      </span>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          ) : company?.top_themes.length ? (
             <div className="space-y-3">
               {company.top_themes.slice(0, 8).map((theme) => (
                 <div key={theme.theme} className="flex items-center gap-3">
@@ -254,12 +329,13 @@ export default function DashboardPage() {
               {submissions.submissions
                 .filter((sub) => !showOnlyMissing || !sub.submitted)
                 .map((sub) => (
-                  <div
+                  <Link
                     key={sub.worker_id}
-                    className={`p-3 rounded-lg text-center ${
+                    href={`/dashboard/workers/${sub.worker_id}`}
+                    className={`p-3 rounded-lg text-center transition-colors ${
                       sub.submitted
-                        ? 'bg-green-50 border border-green-200'
-                        : 'bg-gray-50 border border-gray-200'
+                        ? 'bg-green-50 border border-green-200 hover:bg-green-100'
+                        : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
                     }`}
                   >
                     <div className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-white">
@@ -275,7 +351,7 @@ export default function DashboardPage() {
                     {sub.team_name && (
                       <p className="text-xs text-gray-500 truncate">{sub.team_name}</p>
                     )}
-                  </div>
+                  </Link>
                 ))}
             </div>
             {showOnlyMissing && submissions.submissions.filter(s => !s.submitted).length === 0 && (

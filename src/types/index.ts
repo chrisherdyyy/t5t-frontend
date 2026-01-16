@@ -146,3 +146,85 @@ export interface TeamHealth {
   ai_adoption_rate: number
   blocker_count: number
 }
+
+// Theme with sentiment breakdown
+export interface SentimentBreakdown {
+  positive: number
+  neutral: number
+  negative: number
+}
+
+export interface ThemeSentiment {
+  theme: string
+  count: number
+  sentiment_breakdown: SentimentBreakdown
+  blocker_count: number
+  workers: string[]
+}
+
+// Team summary for detail page
+export interface TeamSummary {
+  team_id: number
+  team_name: string
+  week_of: string
+  narrative: string
+  submission_rate: number
+  submitted_count: number
+  total_workers: number
+  ai_adoption_rate: number
+  blockers: string[]
+  wins: string[]
+  themes: Array<{ theme: string; count: number }>
+  members: Array<{ worker_id: number; name: string; submitted: boolean }>
+}
+
+// Worker profile for detail page
+export interface WorkerProfile {
+  worker_id: number
+  name: string
+  email: string
+  team_name: string | null
+  ai_summary: string
+  submission_count: number
+  submission_streak: number
+  primary_themes: string[]
+  ai_tools_used: string[]
+  sentiment_trend: string
+  recent_wins: string[]
+  submission_history: Array<{
+    week_of: string
+    submitted: boolean
+    themes: string[]
+  }>
+}
+
+// Time and scope selectors for unified intelligence view
+export type TimeRange = 'this_week' | 'all_time' | 'specific_week'
+export type IntelligenceScope = 'company' | 'team' | 'worker'
+
+export interface AvailableWeeksResponse {
+  current_week: string
+  available_weeks: string[]
+  total_weeks: number
+}
+
+export interface AIAdoptionTrend {
+  week: string
+  rate: number
+}
+
+export interface ThemeCount {
+  theme: string
+  count: number
+}
+
+export interface AllTimeSummary {
+  total_weeks_tracked: number
+  total_submissions: number
+  unique_submitters: number
+  average_submission_rate: number
+  ai_adoption_trend: AIAdoptionTrend[]
+  all_time_top_themes: ThemeCount[]
+  sentiment_distribution: { positive: number; neutral: number; negative: number }
+  narrative: string
+}

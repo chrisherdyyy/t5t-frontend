@@ -10,6 +10,11 @@ import type {
   CompanyAnalytics,
   ExecutiveSummary,
   TeamHealth,
+  ThemeSentiment,
+  TeamSummary,
+  WorkerProfile,
+  AvailableWeeksResponse,
+  AllTimeSummary,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://t5t-backend-production.up.railway.app/api'
@@ -103,6 +108,8 @@ export const analytics = {
     api.get<CompanyAnalytics>('/analytics/company', { params: { week_of } }),
   getTeamAnalytics: (team_id: number, week_of?: string) =>
     api.get<CompanyAnalytics>(`/analytics/team/${team_id}`, { params: { week_of } }),
+  getThemesSentiment: (week_of?: string) =>
+    api.get<ThemeSentiment[]>('/analytics/themes/sentiment', { params: { week_of } }),
 }
 
 // CEO Intelligence
@@ -113,6 +120,20 @@ export const intelligence = {
     api.get<TeamHealth[]>('/intelligence/teams/health', { params: { week_of } }),
   regenerateSummary: (week_of?: string) =>
     api.post('/intelligence/summary/regenerate', null, { params: { week_of } }),
+  getTeamSummary: (teamId: number, week_of?: string) =>
+    api.get<TeamSummary>(`/intelligence/summary/team/${teamId}`, { params: { week_of } }),
+  getWorkerProfile: (workerId: number) =>
+    api.get<WorkerProfile>(`/intelligence/worker/${workerId}/profile`),
+  // Available weeks for picker
+  getAvailableWeeks: (scope?: string, scopeId?: number) =>
+    api.get<AvailableWeeksResponse>('/intelligence/weeks/available', {
+      params: { scope, scope_id: scopeId }
+    }),
+  // All-time summaries
+  getCompanySummaryAllTime: () =>
+    api.get<AllTimeSummary>('/intelligence/summary/company/all-time'),
+  getTeamSummaryAllTime: (teamId: number) =>
+    api.get<AllTimeSummary>(`/intelligence/summary/team/${teamId}/all-time`),
 }
 
 export default api
