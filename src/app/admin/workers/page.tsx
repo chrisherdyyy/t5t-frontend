@@ -7,7 +7,31 @@ import { Plus, Pencil, Trash2, Search, ChevronUp, ChevronDown } from 'lucide-rea
 import { WorkerModal } from '@/components/WorkerModal'
 import type { Worker, Team, UserRole } from '@/types'
 
-type SortField = 'name' | 'email' | 'role' | 'manager' | 'reports'
+type SortField = 'name' | 'email' | 'role' | 'team' | 'manager' | 'reports'
+
+// Generate consistent color from string (for team badges)
+function getTeamColor(teamName: string): { bg: string; text: string } {
+  const colors = [
+    { bg: 'bg-blue-100', text: 'text-blue-700' },
+    { bg: 'bg-green-100', text: 'text-green-700' },
+    { bg: 'bg-yellow-100', text: 'text-yellow-700' },
+    { bg: 'bg-purple-100', text: 'text-purple-700' },
+    { bg: 'bg-pink-100', text: 'text-pink-700' },
+    { bg: 'bg-indigo-100', text: 'text-indigo-700' },
+    { bg: 'bg-orange-100', text: 'text-orange-700' },
+    { bg: 'bg-teal-100', text: 'text-teal-700' },
+    { bg: 'bg-cyan-100', text: 'text-cyan-700' },
+    { bg: 'bg-rose-100', text: 'text-rose-700' },
+  ]
+
+  // Hash the team name to get a consistent index
+  let hash = 0
+  for (let i = 0; i < teamName.length; i++) {
+    hash = teamName.charCodeAt(i) + ((hash << 5) - hash)
+  }
+  const index = Math.abs(hash) % colors.length
+  return colors[index]
+}
 type SortDirection = 'asc' | 'desc'
 
 export default function WorkersPage() {
@@ -128,6 +152,12 @@ export default function WorkersPage() {
           aVal = a.role
           bVal = b.role
           break
+        case 'team':
+          const aTeam = allTeams.find((t) => t.id === a.team_id)
+          const bTeam = allTeams.find((t) => t.id === b.team_id)
+          aVal = aTeam?.name.toLowerCase() || 'zzz'
+          bVal = bTeam?.name.toLowerCase() || 'zzz'
+          break
         case 'manager':
           const aManager = allWorkers.find((w) => w.id === a.manager_id)
           const bManager = allWorkers.find((w) => w.id === b.manager_id)
@@ -146,7 +176,7 @@ export default function WorkersPage() {
     })
 
     return filtered
-  }, [allWorkers, searchQuery, sortField, sortDirection, reportCounts])
+  }, [allWorkers, allTeams, searchQuery, sortField, sortDirection, reportCounts])
 
   const SortIcon = ({ field }: { field: SortField }) => {
     if (sortField !== field) return null
@@ -229,6 +259,15 @@ export default function WorkersPage() {
                   </div>
                 </th>
                 <th
+                  onClick={() => handleSort('team')}
+                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
+                >
+                  <div className="flex items-center gap-1">
+                    Team
+                    <SortIcon field="team" />
+                  </div>
+                </th>
+                <th
                   onClick={() => handleSort('manager')}
                   className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider cursor-pointer hover:bg-gray-100"
                 >
@@ -270,12 +309,7 @@ export default function WorkersPage() {
                         }`}>
                           {worker.name.charAt(0).toUpperCase()}
                         </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{worker.name}</p>
-                          {team && (
-                            <p className="text-xs text-gray-500">{team.name}</p>
-                          )}
-                        </div>
+                        <p className="font-medium text-gray-900">{worker.name}</p>
                       </div>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
@@ -293,6 +327,17 @@ export default function WorkersPage() {
                       >
                         {worker.role}
                       </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {team ? (
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getTeamColor(team.name).bg} ${getTeamColor(team.name).text}`}
+                        >
+                          {team.name}
+                        </span>
+                      ) : (
+                        <span className="text-gray-400">-</span>
+                      )}
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-600">
                       {manager?.name || <span className="text-gray-400">-</span>}
