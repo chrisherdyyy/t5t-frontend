@@ -4,14 +4,16 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
 import { workers, reports } from '@/lib/api'
-import { OrgChart } from '@/components/OrgChart'
+import { OrgChart, OrgChartList } from '@/components/OrgChart'
 import { formatDate, formatWeekOf } from '@/lib/utils'
-import type { OrgChartNode, ReportWithDetails } from '@/types'
-import { X, FileText, Bot, Zap, Calendar } from 'lucide-react'
+import type { OrgChartNode } from '@/types'
+import { X, FileText, Calendar, LayoutGrid, List, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 
 export default function OrgChartPage() {
   const router = useRouter()
   const [selectedNode, setSelectedNode] = useState<OrgChartNode | null>(null)
+  const [viewMode, setViewMode] = useState<'visual' | 'list'>('visual')
+  const [zoom, setZoom] = useState(100)
 
   const { data: orgChartData, isLoading } = useQuery({
     queryKey: ['org-chart'],
@@ -32,6 +34,18 @@ export default function OrgChartPage() {
     setSelectedNode(null)
   }
 
+  const handleZoomIn = () => {
+    setZoom((prev) => Math.min(prev + 20, 200))
+  }
+
+  const handleZoomOut = () => {
+    setZoom((prev) => Math.max(prev - 20, 40))
+  }
+
+  const handleZoomReset = () => {
+    setZoom(100)
+  }
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -42,32 +56,113 @@ export default function OrgChartPage() {
 
   return (
     <div className="relative">
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Organization Chart</h1>
-        <p className="text-gray-600">
-          Click on a person to view their T5T history
-        </p>
+      <div className="mb-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-900">Organization Chart</h1>
+            <p className="text-gray-600">
+              Click on a person to view their T5T history
+            </p>
+          </div>
+
+          {/* View Toggle */}
+          <div className="flex items-center gap-2">
+            <div className="flex bg-gray-100 rounded-lg p-1">
+              <button
+                onClick={() => setViewMode('visual')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'visual'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <LayoutGrid className="w-4 h-4" />
+                Visual
+              </button>
+              <button
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
+                  viewMode === 'list'
+                    ? 'bg-white text-gray-900 shadow-sm'
+                    : 'text-gray-600 hover:text-gray-900'
+                }`}
+              >
+                <List className="w-4 h-4" />
+                List
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="flex gap-6">
         {/* Org Chart */}
         <div className={`flex-1 transition-all ${selectedNode ? 'mr-80' : ''}`}>
-          <div className="bg-white rounded-lg shadow-sm border p-6">
-            <div className="flex items-center gap-4 mb-6 text-sm text-gray-600">
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-green-100 border-2 border-green-300" />
-                <span>Submitted</span>
+          <div className="bg-white rounded-lg shadow-sm border">
+            {/* Toolbar */}
+            <div className="flex items-center justify-between p-4 border-b">
+              <div className="flex items-center gap-4 text-sm text-gray-600">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-green-100 border-2 border-green-400" />
+                  <span>Submitted</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 rounded-full bg-gray-100 border-2 border-gray-300" />
+                  <span>Not submitted</span>
+                </div>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-4 h-4 rounded-full bg-gray-100 border-2 border-gray-300" />
-                <span>Not submitted</span>
-              </div>
+
+              {/* Zoom Controls - only show in visual mode */}
+              {viewMode === 'visual' && (
+                <div className="flex items-center gap-1">
+                  <button
+                    onClick={handleZoomOut}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Zoom out"
+                  >
+                    <ZoomOut className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <span className="text-sm text-gray-600 w-12 text-center">{zoom}%</span>
+                  <button
+                    onClick={handleZoomIn}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                    title="Zoom in"
+                  >
+                    <ZoomIn className="w-4 h-4 text-gray-600" />
+                  </button>
+                  <button
+                    onClick={handleZoomReset}
+                    className="p-2 hover:bg-gray-100 rounded-lg transition-colors ml-1"
+                    title="Reset zoom"
+                  >
+                    <RotateCcw className="w-4 h-4 text-gray-600" />
+                  </button>
+                </div>
+              )}
             </div>
 
-            <OrgChart
-              nodes={orgChartData?.data || []}
-              onNodeClick={handleNodeClick}
-            />
+            {/* Chart Content */}
+            <div className="p-6 overflow-auto" style={{ maxHeight: 'calc(100vh - 250px)' }}>
+              {viewMode === 'visual' ? (
+                <div
+                  style={{
+                    transform: `scale(${zoom / 100})`,
+                    transformOrigin: 'top center',
+                    transition: 'transform 0.2s ease',
+                  }}
+                >
+                  <OrgChart
+                    nodes={orgChartData?.data || []}
+                    onNodeClick={handleNodeClick}
+                  />
+                </div>
+              ) : (
+                <OrgChartList
+                  nodes={orgChartData?.data || []}
+                  onNodeClick={handleNodeClick}
+                />
+              )}
+            </div>
           </div>
         </div>
 
