@@ -10,7 +10,7 @@ import type {
   CompanyAnalytics,
 } from '@/types'
 
-const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api'
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://t5t-backend-production.up.railway.app/api'
 
 const api = axios.create({
   baseURL: API_BASE,
