@@ -817,6 +817,13 @@ function TeamWeeklyView({ teamId, weekOf }: { teamId: number; weekOf?: string })
     )
   }
 
+  // Handle both flat and nested metrics structures from API
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const teamData = teamSummary as any
+  const metrics = teamData.metrics || teamData
+  const highlights = teamData.highlights || teamData.wins || []
+  const concerns = teamData.concerns || teamData.blockers || []
+
   return (
     <>
       {/* Team Summary Hero */}
@@ -828,7 +835,7 @@ function TeamWeeklyView({ teamId, weekOf }: { teamId: number; weekOf?: string })
           <div>
             <h2 className="text-lg font-semibold text-gray-900">{teamSummary.team_name}</h2>
             <p className="text-sm text-gray-500">
-              {teamSummary.submitted_count} of {teamSummary.total_workers} submitted
+              {metrics.submitted_count ?? 0} of {metrics.total_workers ?? 0} submitted
             </p>
           </div>
         </div>
@@ -846,76 +853,80 @@ function TeamWeeklyView({ teamId, weekOf }: { teamId: number; weekOf?: string })
           <div>
             <p className="text-sm text-gray-500">Submission Rate</p>
             <p className="text-2xl font-bold text-gray-900">
-              {formatPercentage(teamSummary.submission_rate)}
+              {formatPercentage(metrics.submission_rate ?? 0)}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">AI Adoption</p>
             <p className="text-2xl font-bold text-primary-600">
-              {formatPercentage(teamSummary.ai_adoption_rate)}
+              {formatPercentage(metrics.ai_adoption_rate ?? 0)}
             </p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Blockers</p>
-            <p className="text-2xl font-bold text-red-600">{teamSummary.blockers?.length || 0}</p>
+            <p className="text-2xl font-bold text-red-600">{metrics.blocker_count ?? concerns.length ?? 0}</p>
           </div>
         </div>
       </div>
 
-      {/* Wins & Blockers */}
+      {/* Highlights & Concerns */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-green-500" />
-            Team Wins
+            Key Highlights
           </h3>
-          {teamSummary.wins?.length ? (
+          {highlights.length ? (
             <ul className="space-y-3">
-              {teamSummary.wins.map((win: string, i: number) => (
+              {highlights.map((item: string, i: number) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>{win}</span>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500 text-sm">No wins recorded this period.</p>
+            <p className="text-gray-500 text-sm">No highlights this period.</p>
           )}
         </div>
 
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
-            Blockers
+            Areas of Concern
           </h3>
-          {teamSummary.blockers?.length ? (
+          {concerns.length ? (
             <ul className="space-y-3">
-              {teamSummary.blockers.map((blocker: string, i: number) => (
+              {concerns.map((item: string, i: number) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
                   <span className="text-amber-500 mt-0.5">!</span>
-                  <span>{blocker}</span>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="text-gray-500 text-sm">No blockers reported.</p>
+            <p className="text-gray-500 text-sm">No concerns reported.</p>
           )}
         </div>
       </div>
 
       {/* Team Themes */}
-      {teamSummary.themes && teamSummary.themes.length > 0 && (
+      {(teamData.top_themes || teamData.themes) && (teamData.top_themes || teamData.themes).length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Team Themes</h3>
           <div className="flex flex-wrap gap-2">
-            {teamSummary.themes.map((item: { theme: string; count: number }) => (
-              <span
-                key={item.theme}
-                className="px-3 py-1.5 bg-primary-50 text-primary-700 rounded-full text-sm font-medium capitalize"
-              >
-                {item.theme} ({item.count})
-              </span>
-            ))}
+            {(teamData.top_themes || teamData.themes).map((item: string | { theme: string; count: number }) => {
+              const theme = typeof item === 'string' ? item : item.theme
+              const count = typeof item === 'string' ? null : item.count
+              return (
+                <span
+                  key={theme}
+                  className="px-3 py-1.5 bg-primary-50 text-primary-700 rounded-full text-sm font-medium capitalize"
+                >
+                  {theme}{count !== null ? ` (${count})` : ''}
+                </span>
+              )
+            })}
           </div>
         </div>
       )}
@@ -1076,6 +1087,20 @@ function WorkerProfileView({ profile }: { profile: any }) {
     )
   }
 
+  // Handle API field name differences
+  const name = profile.worker_name || profile.name
+  const narrative = profile.narrative || profile.ai_summary
+  const themes = profile.themes || profile.primary_themes || []
+  const aiTools = profile.ai_tools_used || []
+  const highlights = profile.highlights || profile.recent_wins || []
+  const concerns = profile.recurring_concerns || []
+
+  // Calculate dominant sentiment from breakdown
+  const sentimentTrend = profile.sentiment_breakdown
+    ? (profile.sentiment_breakdown.positive?.percentage > 0.5 ? 'positive' :
+       profile.sentiment_breakdown.negative?.percentage > 0.5 ? 'negative' : 'neutral')
+    : profile.sentiment_trend || 'N/A'
+
   return (
     <>
       {/* Worker Profile Hero */}
@@ -1085,17 +1110,19 @@ function WorkerProfileView({ profile }: { profile: any }) {
             <User className="w-6 h-6 text-primary-600" />
           </div>
           <div>
-            <h2 className="text-lg font-semibold text-gray-900">{profile.name}</h2>
-            <p className="text-sm text-gray-500">{profile.email}</p>
+            <h2 className="text-lg font-semibold text-gray-900">{name}</h2>
+            {profile.job_title && (
+              <p className="text-sm text-gray-500">{profile.job_title}</p>
+            )}
             {profile.team_name && (
               <p className="text-xs text-gray-400">{profile.team_name}</p>
             )}
           </div>
         </div>
 
-        {profile.ai_summary ? (
+        {narrative ? (
           <div className="prose prose-gray max-w-none">
-            <p className="text-gray-700 leading-relaxed text-lg">{profile.ai_summary}</p>
+            <p className="text-gray-700 leading-relaxed text-lg">{narrative}</p>
           </div>
         ) : (
           <p className="text-gray-500 italic">No submissions yet to generate a profile.</p>
@@ -1105,72 +1132,84 @@ function WorkerProfileView({ profile }: { profile: any }) {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-8 pt-6 border-t border-primary-100">
           <div>
             <p className="text-sm text-gray-500">Total Submissions</p>
-            <p className="text-2xl font-bold text-gray-900">{profile.submission_count}</p>
+            <p className="text-2xl font-bold text-gray-900">{profile.submission_count ?? 0}</p>
           </div>
           <div>
             <p className="text-sm text-gray-500">Current Streak</p>
-            <p className="text-2xl font-bold text-primary-600">{profile.submission_streak} weeks</p>
+            <p className="text-2xl font-bold text-primary-600">{profile.submission_streak ?? 0} weeks</p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">AI Tools Used</p>
-            <p className="text-2xl font-bold text-gray-900">{profile.ai_tools_used?.length || 0}</p>
+            <p className="text-sm text-gray-500">AI Adoption</p>
+            <p className="text-2xl font-bold text-gray-900">
+              {profile.ai_adoption_rate != null ? formatPercentage(profile.ai_adoption_rate) : 'N/A'}
+            </p>
           </div>
           <div>
-            <p className="text-sm text-gray-500">Sentiment Trend</p>
-            <p className="text-2xl font-bold text-gray-900 capitalize">{profile.sentiment_trend || 'N/A'}</p>
+            <p className="text-sm text-gray-500">Sentiment</p>
+            <p className={`text-2xl font-bold capitalize ${
+              sentimentTrend === 'positive' ? 'text-green-600' :
+              sentimentTrend === 'negative' ? 'text-red-600' : 'text-gray-900'
+            }`}>{sentimentTrend}</p>
           </div>
         </div>
       </div>
 
       {/* Primary Themes */}
-      {profile.primary_themes && profile.primary_themes.length > 0 && (
+      {themes.length > 0 && (
         <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
           <h3 className="text-lg font-semibold text-gray-900 mb-4">Primary Focus Areas</h3>
           <div className="flex flex-wrap gap-2">
-            {profile.primary_themes.map((theme: string) => (
-              <span
-                key={theme}
-                className="px-3 py-1.5 bg-primary-50 text-primary-700 rounded-full text-sm font-medium capitalize"
-              >
-                {theme}
-              </span>
-            ))}
+            {themes.map((item: string | { theme: string; count: number }) => {
+              const theme = typeof item === 'string' ? item : item.theme
+              const count = typeof item === 'string' ? null : item.count
+              return (
+                <span
+                  key={theme}
+                  className="px-3 py-1.5 bg-primary-50 text-primary-700 rounded-full text-sm font-medium capitalize"
+                >
+                  {theme}{count != null ? ` (${count})` : ''}
+                </span>
+              )
+            })}
           </div>
         </div>
       )}
 
-      {/* AI Tools & Recent Wins */}
+      {/* AI Tools & Highlights */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        {profile.ai_tools_used && profile.ai_tools_used.length > 0 && (
+        {aiTools.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <Bot className="w-5 h-5 text-primary-600" />
               AI Tools Used
             </h3>
             <div className="flex flex-wrap gap-2">
-              {profile.ai_tools_used.map((tool: string) => (
-                <span
-                  key={tool}
-                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
-                >
-                  {tool}
-                </span>
-              ))}
+              {aiTools.map((item: string | { tool: string; count: number }) => {
+                const tool = typeof item === 'string' ? item : item.tool
+                return (
+                  <span
+                    key={tool}
+                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full text-sm"
+                  >
+                    {tool}
+                  </span>
+                )
+              })}
             </div>
           </div>
         )}
 
-        {profile.recent_wins && profile.recent_wins.length > 0 && (
+        {highlights.length > 0 && (
           <div className="bg-white rounded-lg shadow-sm border p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
               <TrendingUp className="w-5 h-5 text-green-500" />
-              Recent Wins
+              Key Highlights
             </h3>
             <ul className="space-y-3">
-              {profile.recent_wins.map((win: string, i: number) => (
+              {highlights.map((item: string, i: number) => (
                 <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
                   <span className="text-green-500 mt-0.5">✓</span>
-                  <span>{win}</span>
+                  <span>{item}</span>
                 </li>
               ))}
             </ul>
@@ -1178,30 +1217,59 @@ function WorkerProfileView({ profile }: { profile: any }) {
         )}
       </div>
 
-      {/* Submission History */}
-      {profile.submission_history && profile.submission_history.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm border p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Submission History</h3>
-          <div className="space-y-3">
-            {profile.submission_history.slice(0, 12).map((entry: { week_of: string; submitted: boolean; themes: string[] }) => (
-              <div key={entry.week_of} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                <div className="flex items-center gap-3">
-                  <span className={`w-3 h-3 rounded-full ${entry.submitted ? 'bg-green-500' : 'bg-gray-300'}`} />
-                  <span className="text-sm text-gray-700">
-                    {new Date(entry.week_of).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
-                  </span>
-                </div>
-                {entry.themes && entry.themes.length > 0 && (
-                  <div className="flex gap-1">
-                    {entry.themes.slice(0, 3).map((theme: string) => (
-                      <span key={theme} className="px-2 py-0.5 bg-primary-50 text-primary-600 rounded text-xs capitalize">
-                        {theme}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
+      {/* Recurring Concerns */}
+      {concerns.length > 0 && (
+        <div className="bg-white rounded-lg shadow-sm border p-6 mb-8">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-amber-500" />
+            Recurring Concerns
+          </h3>
+          <ul className="space-y-3">
+            {concerns.map((item: string, i: number) => (
+              <li key={i} className="flex items-start gap-3 text-sm text-gray-700">
+                <span className="text-amber-500 mt-0.5">!</span>
+                <span>{item}</span>
+              </li>
             ))}
+          </ul>
+        </div>
+      )}
+
+      {/* Sentiment Breakdown */}
+      {profile.sentiment_breakdown && (
+        <div className="bg-white rounded-lg shadow-sm border p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Sentiment Breakdown</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex-1">
+              <div className="h-4 bg-gray-200 rounded-full overflow-hidden flex">
+                <div
+                  className="bg-green-500 h-full"
+                  style={{ width: `${(profile.sentiment_breakdown.positive?.percentage || 0) * 100}%` }}
+                />
+                <div
+                  className="bg-gray-400 h-full"
+                  style={{ width: `${(profile.sentiment_breakdown.neutral?.percentage || 0) * 100}%` }}
+                />
+                <div
+                  className="bg-red-500 h-full"
+                  style={{ width: `${(profile.sentiment_breakdown.negative?.percentage || 0) * 100}%` }}
+                />
+              </div>
+            </div>
+            <div className="flex gap-4 text-sm">
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-green-500" />
+                <span className="text-gray-600">{Math.round((profile.sentiment_breakdown.positive?.percentage || 0) * 100)}%</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-gray-400" />
+                <span className="text-gray-600">{Math.round((profile.sentiment_breakdown.neutral?.percentage || 0) * 100)}%</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <div className="w-3 h-3 rounded-full bg-red-500" />
+                <span className="text-gray-600">{Math.round((profile.sentiment_breakdown.negative?.percentage || 0) * 100)}%</span>
+              </div>
+            </div>
           </div>
         </div>
       )}
