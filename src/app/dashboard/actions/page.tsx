@@ -3,7 +3,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { actions } from '@/lib/api'
 import { formatWeekOf } from '@/lib/utils'
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import {
   CheckSquare,
   Square,
@@ -109,7 +109,7 @@ function WeekSection({
             <ChevronRight className="w-5 h-5 text-gray-500" />
           )}
           <span className="font-medium text-gray-900">
-            Week of {formatWeekOf(weekOf)}
+            {formatWeekOf(weekOf)}
           </span>
         </div>
         <span className={`text-sm px-2 py-0.5 rounded-full ${
@@ -148,6 +148,7 @@ export default function ActionsPage() {
   const [expandedWeeks, setExpandedWeeks] = useState<Set<string>>(new Set())
   const [showCompleted, setShowCompleted] = useState(false)
   const [loadingAction, setLoadingAction] = useState<number | null>(null)
+  const hasInitializedRef = useRef(false)
 
   const { data: actionsData, isLoading } = useQuery({
     queryKey: ['actions'],
@@ -201,10 +202,13 @@ export default function ActionsPage() {
   // Get weeks sorted by date (most recent first)
   const sortedWeeks = Object.keys(byWeek).sort((a, b) => b.localeCompare(a))
 
-  // Auto-expand the most recent week if nothing is expanded
-  if (sortedWeeks.length > 0 && expandedWeeks.size === 0) {
-    setExpandedWeeks(new Set([sortedWeeks[0]]))
-  }
+  // Auto-expand the most recent week on initial load only
+  useEffect(() => {
+    if (!hasInitializedRef.current && sortedWeeks.length > 0) {
+      setExpandedWeeks(new Set([sortedWeeks[0]]))
+      hasInitializedRef.current = true
+    }
+  }, [sortedWeeks])
 
   if (isLoading) {
     return (

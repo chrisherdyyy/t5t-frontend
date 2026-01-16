@@ -5,6 +5,7 @@ import { useSearchParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { Search, Filter, AlertCircle, Calendar, Users, X } from 'lucide-react'
 import { search, teams } from '@/lib/api'
+import { useDebounce } from '@/hooks/useDebounce'
 import type { SearchResultItem, Team } from '@/types'
 
 function SearchContent() {
@@ -19,6 +20,9 @@ function SearchContent() {
   const [onlyBlockers, setOnlyBlockers] = useState(false)
   const [showFilters, setShowFilters] = useState(false)
 
+  // Debounce search query to avoid excessive API calls
+  const debouncedQuery = useDebounce(query, 300)
+
   // Fetch teams for filter
   const { data: teamsData } = useQuery({
     queryKey: ['teams'],
@@ -26,37 +30,35 @@ function SearchContent() {
   })
   const teamsList = teamsData?.data || []
 
-  // Search query
+  // Search query - uses debounced query to prevent excessive requests
   const { data, isLoading, refetch } = useQuery({
-    queryKey: ['search', query, selectedTeams, dateFrom, dateTo, onlyBlockers],
+    queryKey: ['search', debouncedQuery, selectedTeams, dateFrom, dateTo, onlyBlockers],
     queryFn: () =>
-      search.query(query, {
+      search.query(debouncedQuery, {
         teams: selectedTeams.length > 0 ? selectedTeams : undefined,
         date_from: dateFrom || undefined,
         date_to: dateTo || undefined,
         has_blockers: onlyBlockers || undefined,
         limit: 100,
       }),
-    enabled: query.length >= 2,
+    enabled: debouncedQuery.length >= 2,
   })
 
   const results = data?.data?.results || []
   const totalResults = data?.data?.total_results || 0
 
-  // Update URL when query changes
+  // Update URL when debounced query changes
   useEffect(() => {
-    if (query.length >= 2) {
+    if (debouncedQuery.length >= 2) {
       const params = new URLSearchParams()
-      params.set('q', query)
+      params.set('q', debouncedQuery)
       router.replace(`/dashboard/search?${params.toString()}`, { scroll: false })
     }
-  }, [query, router])
+  }, [debouncedQuery, router])
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
-    if (query.length >= 2) {
-      refetch()
-    }
+    // Query triggers automatically via debounced value
   }
 
   const clearFilters = () => {
@@ -233,7 +235,7 @@ function SearchContent() {
       </div>
 
       {/* Results */}
-      {query.length >= 2 && (
+      {debouncedQuery.length >= 2 && (
         <div className="space-y-4">
           {/* Results header */}
           <div className="flex items-center justify-between">
@@ -335,7 +337,7 @@ function SearchContent() {
       )}
 
       {/* Empty state when no query */}
-      {query.length < 2 && (
+      {debouncedQuery.length < 2 && (
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-12 text-center">
           <Search className="w-16 h-16 text-gray-200 mx-auto" />
           <h3 className="mt-6 text-xl font-medium text-gray-900">Search T5T Content</h3>
