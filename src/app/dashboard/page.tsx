@@ -403,32 +403,26 @@ export default function DashboardPage() {
                   ))
               })()}
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+            <div className="flex flex-wrap gap-2">
               {submissions.submissions
                 .filter((sub) => !showOnlyMissing || !sub.submitted)
                 .map((sub) => (
                   <Link
                     key={sub.worker_id}
                     href={`/dashboard/workers/${sub.worker_id}`}
-                    className={`p-3 rounded-lg text-center transition-colors ${
+                    title={sub.team_name || 'No team'}
+                    className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors ${
                       sub.submitted
-                        ? 'bg-green-50 border border-green-200 hover:bg-green-100'
-                        : 'bg-gray-50 border border-gray-200 hover:bg-gray-100'
+                        ? 'bg-green-100 text-green-700 hover:bg-green-200'
+                        : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                     }`}
                   >
-                    <div className="w-8 h-8 mx-auto mb-2 rounded-full flex items-center justify-center bg-white">
-                      {sub.submitted ? (
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border-2 border-gray-300" />
-                      )}
-                    </div>
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {sub.worker_name}
-                    </p>
-                    {sub.team_name && (
-                      <p className="text-xs text-gray-500 truncate">{sub.team_name}</p>
+                    {sub.submitted ? (
+                      <CheckCircle className="w-3 h-3" />
+                    ) : (
+                      <div className="w-3 h-3 rounded-full border border-current" />
                     )}
+                    {sub.worker_name}
                   </Link>
                 ))}
             </div>
