@@ -292,25 +292,31 @@ export interface WeeklyTheme {
   themes: Record<string, number>
 }
 
+export interface SentimentWeek {
+  week: string
+  positive: number
+  neutral: number
+  negative: number
+}
+
+export interface BlockerWeek {
+  week: string
+  count: number
+}
+
+export interface SubmissionWeek {
+  week: string
+  submitted: number
+  expected: number
+  rate: number
+}
+
 export interface TrendsResponse {
   weeks_analyzed: number
   themes_over_time: WeeklyTheme[]
-  sentiment_trajectory: Array<{
-    week: string
-    positive: number
-    neutral: number
-    negative: number
-  }>
-  blocker_trend: Array<{
-    week: string
-    count: number
-  }>
-  submission_rate: Array<{
-    week: string
-    submitted: number
-    expected: number
-    rate: number
-  }>
+  sentiment_trajectory: SentimentWeek[]
+  blocker_trend: BlockerWeek[]
+  submission_rate: SubmissionWeek[]
   emerging_themes: string[]
   declining_themes: string[]
 }
