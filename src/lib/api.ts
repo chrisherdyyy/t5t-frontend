@@ -56,19 +56,19 @@ export const auth = {
 // Teams
 export const teams = {
   list: () => api.get<Team[]>('/teams/'),
-  get: (id: number) => api.get<Team>(`/teams/${id}/`),
+  get: (id: number) => api.get<Team>(`/teams/${id}`),
   create: (data: { name: string; parent_team_id?: number }) =>
     api.post<Team>('/teams/', data),
   update: (id: number, data: Partial<Team>) =>
-    api.patch<Team>(`/teams/${id}/`, data),
-  delete: (id: number) => api.delete(`/teams/${id}/`),
+    api.patch<Team>(`/teams/${id}`, data),
+  delete: (id: number) => api.delete(`/teams/${id}`),
 }
 
 // Workers
 export const workers = {
   list: (params?: { team_id?: number; is_active?: boolean }) =>
     api.get<Worker[]>('/workers/', { params }),
-  get: (id: number) => api.get<WorkerWithRelations>(`/workers/${id}/`),
+  get: (id: number) => api.get<WorkerWithRelations>(`/workers/${id}`),
   getOrgChart: () => api.get<OrgChartNode[]>('/workers/org-chart/'),
   create: (data: {
     email: string
@@ -78,15 +78,15 @@ export const workers = {
     role?: string
   }) => api.post<Worker>('/workers/', data),
   update: (id: number, data: Partial<Worker>) =>
-    api.patch<Worker>(`/workers/${id}/`, data),
-  delete: (id: number) => api.delete(`/workers/${id}/`),
+    api.patch<Worker>(`/workers/${id}`, data),
+  delete: (id: number) => api.delete(`/workers/${id}`),
 }
 
 // Reports
 export const reports = {
   list: (params?: { worker_id?: number; team_id?: number; week_of?: string }) =>
     api.get<Report[]>('/reports/', { params }),
-  get: (id: number) => api.get<ReportWithDetails>(`/reports/${id}/`),
+  get: (id: number) => api.get<ReportWithDetails>(`/reports/${id}`),
   getCurrentWeek: (team_id?: number) =>
     api.get<ReportWithDetails[]>('/reports/current-week/', { params: { team_id } }),
   getWorkerHistory: (worker_id: number) =>
