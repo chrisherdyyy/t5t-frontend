@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { workers, teams } from '@/lib/api'
 import { Plus, Pencil, Trash2, X } from 'lucide-react'
-import type { Worker, Team } from '@/types'
+import type { Worker, Team, UserRole } from '@/types'
 
 export default function WorkersPage() {
   const queryClient = useQueryClient()
@@ -340,7 +340,7 @@ function WorkerModal({
             <select
               value={formData.role}
               onChange={(e) =>
-                setFormData({ ...formData, role: e.target.value })
+                setFormData({ ...formData, role: e.target.value as UserRole })
               }
               className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-transparent"
             >
