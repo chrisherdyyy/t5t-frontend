@@ -1,23 +1,36 @@
 'use client'
 
 import { useState } from 'react'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useRouter } from 'next/navigation'
-import { workers, reports } from '@/lib/api'
+import { workers, teams, reports } from '@/lib/api'
 import { OrgChart, OrgChartList } from '@/components/OrgChart'
+import { WorkerModal } from '@/components/WorkerModal'
 import { formatDate, formatWeekOf } from '@/lib/utils'
-import type { OrgChartNode } from '@/types'
-import { X, FileText, Calendar, LayoutGrid, List, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
+import type { OrgChartNode, Worker } from '@/types'
+import { X, FileText, Calendar, LayoutGrid, List, ZoomIn, ZoomOut, RotateCcw, Pencil } from 'lucide-react'
 
 export default function OrgChartPage() {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [selectedNode, setSelectedNode] = useState<OrgChartNode | null>(null)
   const [viewMode, setViewMode] = useState<'visual' | 'list'>('visual')
   const [zoom, setZoom] = useState(100)
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false)
 
   const { data: orgChartData, isLoading } = useQuery({
     queryKey: ['org-chart'],
     queryFn: () => workers.getOrgChart(),
+  })
+
+  const { data: workersData } = useQuery({
+    queryKey: ['workers'],
+    queryFn: () => workers.list(),
+  })
+
+  const { data: teamsData } = useQuery({
+    queryKey: ['teams'],
+    queryFn: () => teams.list(),
   })
 
   const { data: reportsData } = useQuery({
@@ -26,12 +39,24 @@ export default function OrgChartPage() {
     enabled: !!selectedNode,
   })
 
+  const updateMutation = useMutation({
+    mutationFn: ({ id, data }: { id: number; data: Partial<Worker> }) =>
+      workers.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['workers'] })
+      queryClient.invalidateQueries({ queryKey: ['org-chart'] })
+      setIsEditModalOpen(false)
+    },
+  })
+
   const handleNodeClick = (node: OrgChartNode) => {
     setSelectedNode(node)
+    setIsEditModalOpen(false)
   }
 
   const closePanel = () => {
     setSelectedNode(null)
+    setIsEditModalOpen(false)
   }
 
   const handleZoomIn = () => {
@@ -45,6 +70,11 @@ export default function OrgChartPage() {
   const handleZoomReset = () => {
     setZoom(100)
   }
+
+  // Try to find the full worker data from the workers list
+  const fullWorkerData = selectedNode
+    ? workersData?.data?.find((w) => w.id === selectedNode.id) || null
+    : null
 
   if (isLoading) {
     return (
@@ -173,12 +203,21 @@ export default function OrgChartPage() {
               <h2 className="text-lg font-semibold text-gray-900">
                 {selectedNode.name}
               </h2>
-              <button
-                onClick={closePanel}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-500" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button
+                  onClick={() => setIsEditModalOpen(true)}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                  title="Edit worker"
+                >
+                  <Pencil className="w-5 h-5 text-gray-500" />
+                </button>
+                <button
+                  onClick={closePanel}
+                  className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+                >
+                  <X className="w-5 h-5 text-gray-500" />
+                </button>
+              </div>
             </div>
 
             <div className="p-4">
@@ -248,6 +287,20 @@ export default function OrgChartPage() {
           </div>
         )}
       </div>
+
+      {/* Edit Worker Modal */}
+      {isEditModalOpen && fullWorkerData && (
+        <WorkerModal
+          worker={fullWorkerData}
+          workers={workersData?.data || []}
+          teams={teamsData?.data || []}
+          onClose={() => setIsEditModalOpen(false)}
+          onSubmit={(data) => {
+            updateMutation.mutate({ id: fullWorkerData.id, data })
+          }}
+          isLoading={updateMutation.isPending}
+        />
+      )}
     </div>
   )
 }
