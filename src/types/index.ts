@@ -229,7 +229,7 @@ export interface AllTimeSummary {
   narrative: string
 }
 
-// Actions tracking types
+// Actions tracking types (legacy)
 export interface ActionItem {
   id: number
   content: string
@@ -246,6 +246,40 @@ export interface ActionsResponse {
   pending: ActionItem[]
   completed: ActionItem[]
   by_week: Record<string, ActionItem[]>
+}
+
+// Recommendations types (new strategic recommendations)
+export interface RecommendationItem {
+  index: number
+  action: string
+  owner: string
+  urgency: 'this_week' | 'next_week' | 'this_month'
+  why: string
+  status: 'pending' | 'completed'
+  completed_at: string | null
+}
+
+export interface TeamRecommendations {
+  team_id: number
+  team_name: string
+  recommendations: RecommendationItem[]
+  pending_count: number
+  completed_count: number
+}
+
+export interface WeeklyRecommendations {
+  week_of: string
+  company: RecommendationItem[]
+  teams: TeamRecommendations[]
+  pending_count: number
+  completed_count: number
+}
+
+export interface RecommendationsResponse {
+  current_week: WeeklyRecommendations | null
+  previous_weeks: WeeklyRecommendations[]
+  total_pending: number
+  total_completed: number
 }
 
 // Reports by week types

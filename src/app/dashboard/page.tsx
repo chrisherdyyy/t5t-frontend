@@ -435,18 +435,19 @@ export default function DashboardPage() {
         )}
       </div>
 
-      {/* Wins & Blockers */}
+      {/* AI-Generated Wins & Blockers */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-green-500" />
+            <Brain className="w-4 h-4 text-primary-500" />
             Wins This Week
           </h2>
-          {company?.wins.length ? (
-            <ul className="space-y-2">
-              {company.wins.map((win, i) => (
+          {(summary?.highlights?.length || company?.wins?.length) ? (
+            <ul className="space-y-3">
+              {(summary?.highlights || company?.wins || []).map((win, i) => (
                 <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                  <span className="text-green-500 mt-1">&#x2022;</span>
+                  <CheckCircle className="w-4 h-4 text-green-500 mt-0.5 shrink-0" />
                   <span>{win}</span>
                 </li>
               ))}
@@ -459,13 +460,14 @@ export default function DashboardPage() {
         <div className="bg-white rounded-lg shadow-sm border p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-red-500" />
+            <Brain className="w-4 h-4 text-primary-500" />
             Blockers & Concerns
           </h2>
-          {company?.blockers.length ? (
-            <ul className="space-y-2">
-              {company.blockers.map((blocker, i) => (
+          {(summary?.concerns?.length || company?.blockers?.length) ? (
+            <ul className="space-y-3">
+              {(summary?.concerns || company?.blockers || []).map((blocker, i) => (
                 <li key={i} className="text-sm text-gray-700 flex items-start gap-2">
-                  <span className="text-red-500 mt-1">&#x2022;</span>
+                  <AlertCircle className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
                   <span>{blocker}</span>
                 </li>
               ))}

@@ -16,6 +16,7 @@ import type {
   AvailableWeeksResponse,
   AllTimeSummary,
   ActionsResponse,
+  RecommendationsResponse,
   WeekSummary,
   SearchResponse,
   TrendsResponse,
@@ -140,7 +141,7 @@ export const intelligence = {
     api.get<AllTimeSummary>(`/intelligence/summary/team/${teamId}/all-time`),
 }
 
-// Actions tracking
+// Actions tracking (legacy)
 export const actions = {
   getAll: (status?: 'pending' | 'completed' | 'all', weekOf?: string) =>
     api.get<ActionsResponse>('/intelligence/actions', { params: { status, week_of: weekOf } }),
@@ -151,6 +152,24 @@ export const actions = {
   reopen: (itemId: number) =>
     api.patch<{ status: string; item_id: number; action_status: string }>(
       `/intelligence/actions/${itemId}/reopen`
+    ),
+}
+
+// Recommendations (strategic AI recommendations)
+export const recommendations = {
+  getAll: (weeks?: number) =>
+    api.get<RecommendationsResponse>('/intelligence/recommendations', { params: { weeks } }),
+  complete: (weekOf: string, index: number, scope: 'company' | 'team' = 'company', teamId?: number) =>
+    api.patch<{ status: string; week_of: string; index: number; recommendation: object }>(
+      `/intelligence/recommendations/${encodeURIComponent(weekOf)}/${index}/complete`,
+      null,
+      { params: { scope, team_id: teamId } }
+    ),
+  reopen: (weekOf: string, index: number, scope: 'company' | 'team' = 'company', teamId?: number) =>
+    api.patch<{ status: string; week_of: string; index: number; recommendation: object }>(
+      `/intelligence/recommendations/${encodeURIComponent(weekOf)}/${index}/reopen`,
+      null,
+      { params: { scope, team_id: teamId } }
     ),
 }
 

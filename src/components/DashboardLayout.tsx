@@ -11,7 +11,7 @@ import {
   Settings,
   LogOut,
   Building2,
-  CheckSquare,
+  Lightbulb,
   Search,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
@@ -21,7 +21,7 @@ import { SearchBar } from './SearchBar'
 const navigation = [
   { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Reports', href: '/dashboard/reports', icon: FileText },
-  { name: 'Actions', href: '/dashboard/actions', icon: CheckSquare },
+  { name: 'Recommendations', href: '/dashboard/actions', icon: Lightbulb },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
   { name: 'Org Chart', href: '/dashboard/org-chart', icon: Building2 },
 ]
