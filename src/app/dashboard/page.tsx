@@ -19,6 +19,7 @@ import {
   Sparkles,
 } from 'lucide-react'
 import Link from 'next/link'
+import { EarlyWarnings } from '@/components/EarlyWarnings'
 
 export default function DashboardPage() {
   const [showOnlyMissing, setShowOnlyMissing] = useState(false)
@@ -103,6 +104,11 @@ export default function DashboardPage() {
           </div>
         </div>
       )}
+
+      {/* Early Warnings - Risk Assessment */}
+      <div className="mb-8">
+        <EarlyWarnings />
+      </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

@@ -20,6 +20,8 @@ import type {
   WeekSummary,
   SearchResponse,
   TrendsResponse,
+  RiskAssessment,
+  CrossTeamAnalysis,
 } from '@/types'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || 'https://t5t-backend-production.up.railway.app/api'
@@ -208,6 +210,16 @@ export const search = {
 export const trends = {
   get: (weeks?: number, teamId?: number) =>
     api.get<TrendsResponse>('/intelligence/trends', { params: { weeks, team_id: teamId } }),
+}
+
+// Risk Assessment (Early Warning System)
+export const risks = {
+  getAssessment: (weekOf?: string) =>
+    api.get<RiskAssessment>('/intelligence/risks', { params: { week_of: weekOf } }),
+  getWorkerHistory: (workerId: number, weeks?: number) =>
+    api.get(`/intelligence/risks/worker/${workerId}`, { params: { weeks } }),
+  getCrossTeam: (weekOf?: string) =>
+    api.get<CrossTeamAnalysis>('/intelligence/cross-team', { params: { week_of: weekOf } }),
 }
 
 export default api

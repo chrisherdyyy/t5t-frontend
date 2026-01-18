@@ -354,3 +354,63 @@ export interface TrendsResponse {
   emerging_themes: string[]
   declining_themes: string[]
 }
+
+// Risk Assessment types (Early Warning System)
+export type RiskLevel = 'low' | 'medium' | 'high' | 'critical'
+export type SentimentTrend = 'improving' | 'stable' | 'declining'
+
+export interface WorkerRisk {
+  worker_id: number
+  worker_name: string
+  team_name: string | null
+  job_title: string | null
+  burnout_risk: number
+  engagement_score: number
+  sentiment_trend: string
+  assessment_summary: string
+  recommended_actions: string[] | null
+  risk_level: RiskLevel
+}
+
+export interface TeamRisk {
+  team_id: number
+  team_name: string
+  health_score: number
+  alignment_score: number
+  cross_team_friction: number
+  at_risk_workers: number
+  assessment_summary: string
+  recommended_actions: string[] | null
+}
+
+export interface RiskAssessment {
+  week_of: string
+  high_risk_workers: WorkerRisk[]
+  medium_risk_workers: WorkerRisk[]
+  team_risks: TeamRisk[]
+  company_risk_summary: string
+  top_interventions: string[]
+}
+
+// Cross-team analysis types
+export interface CrossTeamMention {
+  from_team: string
+  to_team: string
+  mention_type: string
+  context: string
+  sentiment: string
+}
+
+export interface DependencyChain {
+  chain: string[]
+  description: string
+  risk_level: RiskLevel
+}
+
+export interface CrossTeamAnalysis {
+  week_of: string
+  mentions: CrossTeamMention[]
+  dependency_chains: DependencyChain[]
+  friction_points: string[]
+  collaboration_highlights: string[]
+}
