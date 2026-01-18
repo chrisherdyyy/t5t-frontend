@@ -396,21 +396,37 @@ export interface RiskAssessment {
 export interface CrossTeamMention {
   from_team: string
   to_team: string
-  mention_type: string
+  mention_type: string  // "waiting_on", "blocked_by", "collaborating_with"
   context: string
-  sentiment: string
+  sentiment: string     // "positive", "neutral", "negative"
 }
 
 export interface DependencyChain {
-  chain: string[]
+  chain: string[]       // e.g., ["Sales", "Product", "Engineering"]
   description: string
-  risk_level: RiskLevel
+  risk_level: string    // "low", "medium", "high"
+}
+
+export interface SystemicIssue {
+  issue: string
+  affected_teams: string[]
+  mention_count: number
+  severity: string      // "low", "medium", "high"
+}
+
+export interface FrictionPoint {
+  teams_involved: string[]
+  description: string
+  recommended_action: string
 }
 
 export interface CrossTeamAnalysis {
   week_of: string
-  mentions: CrossTeamMention[]
+  cross_team_mentions: CrossTeamMention[]
   dependency_chains: DependencyChain[]
-  friction_points: string[]
-  collaboration_highlights: string[]
+  systemic_issues: SystemicIssue[]
+  friction_points: FrictionPoint[]
+  narrative: string
+  teams_analyzed?: string[]
+  total_items_analyzed?: number
 }

@@ -20,6 +20,8 @@ import {
 } from 'lucide-react'
 import Link from 'next/link'
 import { EarlyWarnings } from '@/components/EarlyWarnings'
+import { TeamHealthScorecard } from '@/components/TeamHealthScorecard'
+import { TeamFrictionAnalysis } from '@/components/TeamFrictionAnalysis'
 
 export default function DashboardPage() {
   const [showOnlyMissing, setShowOnlyMissing] = useState(false)
@@ -108,6 +110,16 @@ export default function DashboardPage() {
       {/* Early Warnings - Risk Assessment */}
       <div className="mb-8">
         <EarlyWarnings />
+      </div>
+
+      {/* Team Health Scorecard */}
+      <div className="mb-8">
+        <TeamHealthScorecard maxTeams={6} />
+      </div>
+
+      {/* Cross-Team Friction Analysis */}
+      <div className="mb-8">
+        <TeamFrictionAnalysis compact={true} />
       </div>
 
       {/* Stats Grid */}
