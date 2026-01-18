@@ -25,11 +25,11 @@ import { SearchBar } from './SearchBar'
 
 const unifiedNavigation = [
   { name: 'CEO Dashboard', href: '/unified', icon: Sparkles },
-  { name: 'People Directory', href: '/unified/people', icon: UserCircle },
+  { name: 'People', href: '/unified/people', icon: UserCircle },
 ]
 
-const navigation = [
-  { name: 'T5T Dashboard', href: '/dashboard', icon: LayoutDashboard },
+const t5tNavigation = [
+  { name: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { name: 'Reports', href: '/dashboard/reports', icon: FileText },
   { name: 'Recommendations', href: '/dashboard/actions', icon: Lightbulb },
   { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
@@ -37,17 +37,58 @@ const navigation = [
 ]
 
 const wbrNavigation = [
-  { name: 'WBR Dashboard', href: '/wbr', icon: Target },
+  { name: 'Dashboard', href: '/wbr', icon: Target },
   { name: 'Projects', href: '/wbr/projects', icon: FolderKanban },
-  { name: 'Upload WBR', href: '/wbr/upload', icon: Upload },
+  { name: 'Upload', href: '/wbr/upload', icon: Upload },
 ]
 
 const adminNavigation = [
   { name: 'Workers', href: '/admin/workers', icon: Users },
   { name: 'Teams', href: '/admin/teams', icon: Building2 },
-  { name: 'WBR Participants', href: '/wbr/participants', icon: Users },
+  { name: 'Participants', href: '/wbr/participants', icon: Users },
   { name: 'Settings', href: '/admin/settings', icon: Settings },
 ]
+
+function NavSection({
+  title,
+  items,
+  pathname
+}: {
+  title: string
+  items: { name: string; href: string; icon: React.ComponentType<{ className?: string }> }[]
+  pathname: string
+}) {
+  return (
+    <div className="mb-6">
+      <p className="px-3 mb-1 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">
+        {title}
+      </p>
+      <div className="space-y-0.5">
+        {items.map((item) => {
+          const isActive = pathname === item.href ||
+            (item.href !== '/dashboard' && item.href !== '/wbr' && pathname.startsWith(item.href + '/')) ||
+            (item.href === '/dashboard' && pathname === '/dashboard') ||
+            (item.href === '/wbr' && pathname === '/wbr')
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={cn(
+                'flex items-center gap-2.5 px-3 py-1.5 text-[13px] font-medium transition-colors rounded-md',
+                isActive
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-600 hover:text-gray-900 hover:bg-gray-50'
+              )}
+            >
+              <item.icon className="w-4 h-4" />
+              {item.name}
+            </Link>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
@@ -68,144 +109,47 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
   }
 
   const isAdmin = user?.role === 'admin'
-  const isManager = user?.role === 'manager' || isAdmin
 
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Sidebar */}
-      <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200">
+      <aside className="fixed inset-y-0 left-0 w-56 bg-white border-r border-gray-200">
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b">
-            <Link href="/dashboard" className="text-xl font-bold text-gray-900">
+          <div className="px-4 py-5 border-b border-gray-100">
+            <Link href="/unified" className="text-lg font-semibold text-gray-900">
               T5T Tracker
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 p-4 space-y-1 overflow-y-auto">
-            {/* Unified Section */}
-            <div className="mb-4">
-              <p className="px-3 text-xs font-semibold text-purple-600 uppercase tracking-wider">
-                Unified
-              </p>
-            </div>
-            {unifiedNavigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-purple-50 text-purple-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
-                </Link>
-              )
-            })}
-
-            {/* T5T Section */}
-            <div className="mt-6 mb-4">
-              <p className="px-3 text-xs font-semibold text-indigo-600 uppercase tracking-wider">
-                T5T
-              </p>
-            </div>
-            {navigation.map((item) => {
-              const isActive = pathname === item.href
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-indigo-50 text-indigo-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
-                </Link>
-              )
-            })}
-
-            {/* WBR Section */}
-            <div className="mt-6 mb-4">
-              <p className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                WBR
-              </p>
-            </div>
-            {wbrNavigation.map((item) => {
-              const isActive = pathname === item.href || pathname.startsWith(item.href + '/')
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={cn(
-                    'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                    isActive
-                      ? 'bg-amber-50 text-amber-700'
-                      : 'text-gray-700 hover:bg-gray-100'
-                  )}
-                >
-                  <item.icon className="w-5 h-5" />
-                  {item.name}
-                </Link>
-              )
-            })}
-
+          <nav className="flex-1 px-2 py-4 overflow-y-auto">
+            <NavSection title="Overview" items={unifiedNavigation} pathname={pathname} />
+            <NavSection title="T5T" items={t5tNavigation} pathname={pathname} />
+            <NavSection title="WBR" items={wbrNavigation} pathname={pathname} />
             {isAdmin && (
-              <>
-                <div className="mt-6 mb-4">
-                  <p className="px-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    Admin
-                  </p>
-                </div>
-                {adminNavigation.map((item) => {
-                  const isActive = pathname === item.href
-                  return (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={cn(
-                        'flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors',
-                        isActive
-                          ? 'bg-primary-50 text-primary-700'
-                          : 'text-gray-700 hover:bg-gray-100'
-                      )}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      {item.name}
-                    </Link>
-                  )
-                })}
-              </>
+              <NavSection title="Admin" items={adminNavigation} pathname={pathname} />
             )}
           </nav>
 
           {/* User section */}
-          <div className="p-4 border-t">
+          <div className="px-3 py-3 border-t border-gray-100">
             {user && (
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center text-primary-700 font-semibold">
+              <div className="flex items-center gap-2.5 mb-2 px-2">
+                <div className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-medium text-sm">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium text-gray-900 truncate">
                     {user.name}
                   </p>
-                  <p className="text-xs text-gray-500 capitalize">{user.role}</p>
+                  <p className="text-[11px] text-gray-500 capitalize">{user.role}</p>
                 </div>
               </div>
             )}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 w-full px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              className="flex items-center gap-2 w-full px-2 py-1.5 text-[13px] text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
             >
               <LogOut className="w-4 h-4" />
               Sign Out
@@ -215,23 +159,23 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
       </aside>
 
       {/* Main content */}
-      <main className="ml-64 min-h-screen">
+      <main className="ml-56 min-h-screen">
         {/* Header with search */}
         <div className="sticky top-0 z-40 bg-white/80 backdrop-blur-sm border-b border-gray-200">
-          <div className="flex items-center justify-between px-8 py-4">
+          <div className="flex items-center justify-between px-6 py-3">
             <div className="flex-1 max-w-md">
               <SearchBar />
             </div>
             <Link
               href="/dashboard/search"
-              className="ml-4 flex items-center gap-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
+              className="ml-4 flex items-center gap-1.5 px-2.5 py-1.5 text-[13px] text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-md transition-colors"
             >
-              <Search className="w-4 h-4" />
-              <span className="hidden sm:inline">Advanced Search</span>
+              <Search className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Advanced</span>
             </Link>
           </div>
         </div>
-        <div className="p-8">{children}</div>
+        <div className="p-6">{children}</div>
       </main>
     </div>
   )
