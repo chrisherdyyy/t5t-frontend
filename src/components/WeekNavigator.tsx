@@ -10,7 +10,9 @@ interface WeekNavigatorProps {
 }
 
 function formatWeekLabel(weekOf: string): string {
-  const date = new Date(weekOf + 'T00:00:00')
+  // Handle both "2026-01-19" and "2026-01-19T14:00:00" formats
+  const dateStr = weekOf.includes('T') ? weekOf : weekOf + 'T00:00:00'
+  const date = new Date(dateStr)
   return `Week of ${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`
 }
 
