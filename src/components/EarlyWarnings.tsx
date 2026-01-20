@@ -94,10 +94,14 @@ function TeamRiskCard({ team }: { team: TeamRisk }) {
   )
 }
 
-export function EarlyWarnings() {
+interface EarlyWarningsProps {
+  weekOf?: string
+}
+
+export function EarlyWarnings({ weekOf }: EarlyWarningsProps = {}) {
   const { data, isLoading, error } = useQuery({
-    queryKey: ['risks'],
-    queryFn: () => risks.getAssessment(),
+    queryKey: ['risks', weekOf],
+    queryFn: () => risks.getAssessment(weekOf),
     staleTime: 5 * 60 * 1000, // 5 minutes
   })
 

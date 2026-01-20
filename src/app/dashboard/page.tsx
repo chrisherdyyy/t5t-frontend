@@ -1,6 +1,7 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, Suspense } from 'react'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { useQuery } from '@tanstack/react-query'
 import { analytics, reports, intelligence, trends } from '@/lib/api'
 import { formatWeekOf, formatPercentage } from '@/lib/utils'
@@ -22,32 +23,68 @@ import Link from 'next/link'
 import { EarlyWarnings } from '@/components/EarlyWarnings'
 import { TeamHealthScorecard } from '@/components/TeamHealthScorecard'
 import { TeamFrictionAnalysis } from '@/components/TeamFrictionAnalysis'
+import { WeekNavigator } from '@/components/WeekNavigator'
 
-export default function DashboardPage() {
+function DashboardContent() {
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const weekParam = searchParams.get('week')
+
   const [showOnlyMissing, setShowOnlyMissing] = useState(false)
+
+  // Fetch available weeks
+  const { data: weeksData } = useQuery({
+    queryKey: ['available-weeks'],
+    queryFn: () => intelligence.getAvailableWeeks(),
+  })
+
+  const availableWeeks = weeksData?.data?.available_weeks || []
+  const currentWeek = weeksData?.data?.current_week || ''
+
+  // Determine selected week: URL param > current week
+  const selectedWeek = weekParam && availableWeeks.includes(weekParam)
+    ? weekParam
+    : currentWeek
+
+  // Update URL when week changes
+  const handleWeekChange = (week: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (week === currentWeek) {
+      params.delete('week')
+    } else {
+      params.set('week', week)
+    }
+    router.push(`/dashboard${params.toString() ? `?${params.toString()}` : ''}`)
+  }
+
   const { data: companyData, isLoading: analyticsLoading } = useQuery({
-    queryKey: ['company-analytics'],
-    queryFn: () => analytics.getCompanyAnalytics(),
+    queryKey: ['company-analytics', selectedWeek],
+    queryFn: () => analytics.getCompanyAnalytics(selectedWeek || undefined),
+    enabled: !!selectedWeek,
   })
 
   const { data: submissionsData, isLoading: submissionsLoading } = useQuery({
-    queryKey: ['submissions'],
-    queryFn: () => analytics.getSubmissions(),
+    queryKey: ['submissions', selectedWeek],
+    queryFn: () => analytics.getSubmissions({ week_of: selectedWeek || undefined }),
+    enabled: !!selectedWeek,
   })
 
   const { data: reportsData, isLoading: reportsLoading } = useQuery({
-    queryKey: ['current-week-reports'],
+    queryKey: ['current-week-reports', selectedWeek],
     queryFn: () => reports.getCurrentWeek(),
+    enabled: !!selectedWeek,
   })
 
   const { data: summaryData, isLoading: summaryLoading } = useQuery({
-    queryKey: ['executive-summary'],
-    queryFn: () => intelligence.getCompanySummary(),
+    queryKey: ['executive-summary', selectedWeek],
+    queryFn: () => intelligence.getCompanySummary({ week_of: selectedWeek || undefined }),
+    enabled: !!selectedWeek,
   })
 
   const { data: themesSentimentData, isLoading: themesLoading } = useQuery({
-    queryKey: ['themes-sentiment'],
-    queryFn: () => analytics.getThemesSentiment(),
+    queryKey: ['themes-sentiment', selectedWeek],
+    queryFn: () => analytics.getThemesSentiment(selectedWeek || undefined),
+    enabled: !!selectedWeek,
   })
 
   const { data: trendsData, isLoading: trendsLoading } = useQuery({
@@ -62,7 +99,7 @@ export default function DashboardPage() {
   const summary = summaryData?.data
   const trendsInfo = trendsData?.data
 
-  const isLoading = analyticsLoading || submissionsLoading || reportsLoading || summaryLoading || themesLoading
+  const isLoading = analyticsLoading || submissionsLoading || reportsLoading || summaryLoading || themesLoading || !selectedWeek
 
   if (isLoading) {
     return (
@@ -74,11 +111,18 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="mb-8">
-        <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-        {company && (
-          <p className="text-gray-600">{formatWeekOf(company.week_of)}</p>
-        )}
+      <div className="mb-8 flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
+          {selectedWeek && availableWeeks.length > 0 && (
+            <WeekNavigator
+              currentWeek={selectedWeek}
+              availableWeeks={availableWeeks}
+              onWeekChange={handleWeekChange}
+              isLoading={analyticsLoading}
+            />
+          )}
+        </div>
       </div>
 
       {/* Executive Summary Card */}
@@ -109,17 +153,17 @@ export default function DashboardPage() {
 
       {/* Early Warnings - Risk Assessment */}
       <div className="mb-8">
-        <EarlyWarnings />
+        <EarlyWarnings weekOf={selectedWeek} />
       </div>
 
       {/* Team Health Scorecard */}
       <div className="mb-8">
-        <TeamHealthScorecard maxTeams={6} />
+        <TeamHealthScorecard maxTeams={6} weekOf={selectedWeek} />
       </div>
 
       {/* Cross-Team Friction Analysis */}
       <div className="mb-8">
-        <TeamFrictionAnalysis compact={true} />
+        <TeamFrictionAnalysis compact={true} weekOf={selectedWeek} />
       </div>
 
       {/* Stats Grid */}
@@ -532,5 +576,17 @@ function StatCard({
         </div>
       </div>
     </div>
+  )
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary-600"></div>
+      </div>
+    }>
+      <DashboardContent />
+    </Suspense>
   )
 }
